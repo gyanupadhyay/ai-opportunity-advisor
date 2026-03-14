@@ -3,6 +3,7 @@ library;
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:web/web.dart' as web;
 
 import '../constants.dart';
 import '../models/opportunity.dart';
@@ -20,14 +21,33 @@ class ApiService {
     defaultValue: 'http://127.0.0.1:3000',
   );
 
-  static final String _sessionId =
-      'session_${DateTime.now().millisecondsSinceEpoch}';
+  static String get _sessionId {
+    final uid = web.window.localStorage.getItem('pathora_uid');
+    if (uid != null && uid.isNotEmpty) return uid;
+
+    const fallbackKey = 'pathora_fallback_session';
+    final existing = web.window.localStorage.getItem(fallbackKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+
+    final generated = 'session_${DateTime.now().millisecondsSinceEpoch}';
+    web.window.localStorage.setItem(fallbackKey, generated);
+    return generated;
+  }
+
+  static Map<String, String> get _authHeaders {
+    final token = web.window.localStorage.getItem('pathora_id_token');
+    if (token == null || token.isEmpty) return {};
+    return {'Authorization': 'Bearer $token'};
+  }
 
   static Future<ApiResponse> sendMessage(String message) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl$endpointChat'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          ..._authHeaders,
+        },
         body: jsonEncode({
           'sessionId': _sessionId,
           'message': message,

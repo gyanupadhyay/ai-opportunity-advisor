@@ -5,6 +5,7 @@ import 'package:web/web.dart' as web;
 import '../constants.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import 'chat_input_bar.dart';
 import 'message_bubble.dart';
 
@@ -34,10 +35,18 @@ class ChatWidgetState extends State<ChatWidget> {
 
     try {
       final response = await ApiService.sendMessage(startMessage);
+      final user = AuthService.currentUser;
+      var reply = response.reply;
+
+      if (user != null && user.name.isNotEmpty) {
+        final first = user.name.split(' ').first;
+        reply = 'Hi $first,\n\n$reply';
+      }
+
       setState(() {
         _messages.add(
           ChatMessage(
-            content: response.reply,
+            content: reply,
             role: roleAssistant,
             opportunities: response.opportunities,
           ),
@@ -45,11 +54,16 @@ class ChatWidgetState extends State<ChatWidget> {
         _isLoading = false;
       });
     } catch (_) {
+      final user = AuthService.currentUser;
+      final greeting = (user != null && user.name.isNotEmpty)
+          ? 'Hi ${user.name.split(' ').first}!'
+          : 'Hi there!';
+
       setState(() {
         _messages.add(
           ChatMessage(
             content:
-                'Hi there! I\u{2019}m Pathora AI, your personal guide to '
+                '$greeting I\u{2019}m Pathora AI, your personal guide to '
                 'discovering scholarships, internships, fellowships, and global '
                 'opportunities.\n\n'
                 'Let\u{2019}s start \u{2014} which country are you from?',

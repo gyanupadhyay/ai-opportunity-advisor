@@ -9,6 +9,74 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+        signInWithPopup,
+        signOut,
+        GoogleAuthProvider,
+      } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCkcdhvDaXqwut9dk-bKiEN_i8UKYJcOx4",
+        authDomain: "ai-opportunity-advisor.firebaseapp.com",
+        projectId: "ai-opportunity-advisor",
+        storageBucket: "ai-opportunity-advisor.firebasestorage.app",
+        messagingSenderId: "890032787840",
+        appId: "1:890032787840:web:e277c762b9b462c4ef3165",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const googleProvider = new GoogleAuthProvider();
+
+      function syncUserToStorage(user) {
+        if (user) {
+          user.getIdToken().then((token) => {
+            localStorage.setItem("pathora_uid", user.uid);
+            localStorage.setItem("pathora_id_token", token);
+            localStorage.setItem("pathora_user_name", user.displayName || "");
+            localStorage.setItem("pathora_user_email", user.email || "");
+            localStorage.setItem("pathora_user_photo", user.photoURL || "");
+            window.dispatchEvent(new CustomEvent("pathora-auth-changed", { detail: { loggedIn: true } }));
+          });
+        } else {
+          localStorage.removeItem("pathora_uid");
+          localStorage.removeItem("pathora_id_token");
+          localStorage.removeItem("pathora_user_name");
+          localStorage.removeItem("pathora_user_email");
+          localStorage.removeItem("pathora_user_photo");
+          window.dispatchEvent(new CustomEvent("pathora-auth-changed", { detail: { loggedIn: false } }));
+        }
+      }
+
+      onAuthStateChanged(auth, syncUserToStorage);
+
+      // Refresh token every 50 minutes (tokens expire in 60 min)
+      setInterval(() => {
+        const user = auth.currentUser;
+        if (user) user.getIdToken(true).then((t) => localStorage.setItem("pathora_id_token", t));
+      }, 50 * 60 * 1000);
+
+      // Expose sign-in / sign-out to Dart via global functions
+      window.pathoraSignInWithGoogle = async function () {
+        try {
+          await signInWithPopup(auth, googleProvider);
+          return true;
+        } catch (e) {
+          console.error("Google sign-in failed:", e);
+          return false;
+        }
+      };
+
+      window.pathoraSignOut = async function () {
+        await signOut(auth);
+      };
+    </script>
+
     <script defer src="main.client.dart.js"></script>
   </head>
   <body></body>

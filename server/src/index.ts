@@ -4,6 +4,7 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { handleChatMessage } from "./chat_handler";
 import adminRoutes from "./admin_routes";
+import { firebaseAuthMiddleware } from "./auth_middleware";
 import {
   AI_MODEL,
   AI_MAX_TOKENS_HEALTH,
@@ -24,6 +25,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(firebaseAuthMiddleware);
 
 const limiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS,

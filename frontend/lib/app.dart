@@ -5,6 +5,7 @@ import 'constants.dart';
 import 'pages/admin_page.dart';
 import 'pages/chat_page.dart';
 import 'pages/home_page.dart';
+import 'pages/login_page.dart';
 
 class App extends StatelessComponent {
   const App({super.key});
@@ -17,6 +18,11 @@ class App extends StatelessComponent {
           path: routeHome,
           title: 'AI Opportunity Advisor',
           builder: (context, state) => const HomePage(),
+        ),
+        Route(
+          path: routeLogin,
+          title: 'Sign In - $appName',
+          builder: (context, state) => const LoginPage(),
         ),
         Route(
           path: routeChat,

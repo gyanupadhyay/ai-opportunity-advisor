@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import {
   loadConversation,
   saveConversation,
@@ -7,12 +7,14 @@ import {
 import { processConversation } from "./recommendation_engine";
 import { ConversationState } from "./models/user_model";
 import { START_MESSAGE } from "./config";
+import { AuthedRequest } from "./auth_middleware";
 
 export async function handleChatMessage(
-  req: Request,
+  req: AuthedRequest,
   res: Response
 ): Promise<void> {
-  const { sessionId, message } = req.body;
+  const { sessionId: bodySessionId, message } = req.body;
+  const sessionId = req.user?.uid ?? bodySessionId;
 
   if (!sessionId || !message) {
     res.status(400).json({ error: "sessionId and message are required" });

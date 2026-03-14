@@ -14,6 +14,7 @@ const String roleAssistant = 'assistant';
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 const String routeHome = '/';
+const String routeLogin = '/login';
 const String routeChat = '/chat';
 const String routeAdmin = '/admin';
 

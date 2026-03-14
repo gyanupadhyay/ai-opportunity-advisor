@@ -3,12 +3,15 @@ import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
 
 import '../constants.dart';
+import '../services/auth_service.dart';
 
 class HomePage extends StatelessComponent {
   const HomePage({super.key});
 
   @override
   Component build(BuildContext context) {
+    final destination = AuthService.isLoggedIn ? routeChat : routeLogin;
+
     return div(classes: 'landing-page', [
       div(classes: 'landing-content', [
         div(classes: 'landing-icon', [.text('\u{1F9ED}')]),
@@ -29,7 +32,7 @@ class HomePage extends StatelessComponent {
           span(classes: 'feature-tag', [.text('\u{2708}\u{FE0F} Exchange Programs')]),
         ]),
         Link(
-          to: routeChat,
+          to: destination,
           child: span(classes: 'start-chat-btn', [
             .text('Start Exploring \u{2192}'),
           ]),
