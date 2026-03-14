@@ -106,6 +106,63 @@ class ChatWidgetState extends State<ChatWidget> {
     _scrollToBottom();
   }
 
+  static const _quickReplyMap = <String, List<String>>{
+    'education level': ['High School', 'Undergraduate', 'Masters', 'PhD'],
+    'what level': ['High School', 'Undergraduate', 'Masters', 'PhD'],
+    'academic level': ['High School', 'Undergraduate', 'Masters', 'PhD'],
+    'opportunity type': [
+      'Scholarships', 'Internships', 'Fellowships',
+      'Research Programs', 'Exchange Programs', 'Global Summits',
+    ],
+    'type of opportunit': [
+      'Scholarships', 'Internships', 'Fellowships',
+      'Research Programs', 'Exchange Programs', 'Global Summits',
+    ],
+    'kind of opportunit': [
+      'Scholarships', 'Internships', 'Fellowships',
+      'Research Programs', 'Exchange Programs', 'Global Summits',
+    ],
+    'field of study': [
+      'Computer Science', 'Engineering', 'Business',
+      'Medicine', 'Arts', 'Other',
+    ],
+    'what field': [
+      'Computer Science', 'Engineering', 'Business',
+      'Medicine', 'Arts', 'Other',
+    ],
+    'which field': [
+      'Computer Science', 'Engineering', 'Business',
+      'Medicine', 'Arts', 'Other',
+    ],
+    'preferred country': [
+      'USA', 'Europe', 'Canada', 'Asia', 'Global / No Preference',
+    ],
+    'preferred region': [
+      'USA', 'Europe', 'Canada', 'Asia', 'Global / No Preference',
+    ],
+    'which region': [
+      'USA', 'Europe', 'Canada', 'Asia', 'Global / No Preference',
+    ],
+    'which countr': [
+      'USA', 'Europe', 'Canada', 'Asia', 'Global / No Preference',
+    ],
+    'prefer to study': [
+      'USA', 'Europe', 'Canada', 'Asia', 'Global / No Preference',
+    ],
+  };
+
+  List<String> _getQuickReplies() {
+    if (_isLoading || _messages.isEmpty) return [];
+    final last = _messages.last;
+    if (last.role != 'assistant') return [];
+
+    final lower = last.content.toLowerCase();
+    for (final entry in _quickReplyMap.entries) {
+      if (lower.contains(entry.key)) return entry.value;
+    }
+    return [];
+  }
+
   void _toggleMic() {
     if (!_speechService.isSupported || _isLoading) return;
 
@@ -148,6 +205,15 @@ class ChatWidgetState extends State<ChatWidget> {
             .text('Pathora AI is thinking...'),
           ]),
       ]),
+      if (_getQuickReplies().isNotEmpty)
+        div(classes: 'quick-replies', [
+          for (final option in _getQuickReplies())
+            button(
+              classes: 'quick-reply-chip',
+              onClick: () => _sendMessage(option),
+              [.text(option)],
+            ),
+        ]),
       div(classes: 'chat-input-area', [
         input<String>(
           key: _inputKey,
