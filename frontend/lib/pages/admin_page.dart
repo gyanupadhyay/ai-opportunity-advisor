@@ -3,6 +3,7 @@ import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
 import 'package:web/web.dart' as web;
 
+import '../constants.dart';
 import '../models/opportunity.dart';
 import '../services/api_service.dart';
 import '../components/opportunity_form.dart';
@@ -156,7 +157,7 @@ class _AdminPageState extends State<AdminPage> {
       div(classes: 'admin-header', [
         div(classes: 'admin-header-left', [
           Link(
-            to: '/',
+            to: routeHome,
             child: span(classes: 'back-btn', [.text('\u{2190} Home')]),
           ),
           h2([.text('Manage Opportunities')]),

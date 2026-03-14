@@ -1,6 +1,7 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
+import '../constants.dart';
 import '../models/opportunity.dart';
 
 class OpportunityCard extends StatelessComponent {
@@ -9,15 +10,9 @@ class OpportunityCard extends StatelessComponent {
   const OpportunityCard({required this.opportunity, super.key});
 
   String _typeClass() {
-    return switch (opportunity.type.toLowerCase()) {
-      'scholarship' => 'scholarship',
-      'internship' => 'internship',
-      'fellowship' => 'fellowship',
-      'summit' => 'summit',
-      'exchange' => 'exchange',
-      'research' => 'research',
-      _ => 'scholarship',
-    };
+    final t = opportunity.type.toLowerCase();
+    if (opportunityTypes.contains(t)) return t;
+    return typeScholarship;
   }
 
   @override

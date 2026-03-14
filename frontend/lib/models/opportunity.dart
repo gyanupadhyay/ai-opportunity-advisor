@@ -1,3 +1,5 @@
+import '../constants.dart';
+
 class Opportunity {
   final String id;
   final String title;
@@ -20,7 +22,7 @@ class Opportunity {
     this.deadline = '',
     this.description = '',
     this.applicationLink = '',
-    this.source = 'manual',
+    this.source = sourceManual,
   });
 
   factory Opportunity.fromJson(Map<String, dynamic> json) {
@@ -34,7 +36,7 @@ class Opportunity {
       deadline: (json['deadline'] as String?) ?? '',
       description: (json['description'] as String?) ?? '',
       applicationLink: (json['applicationLink'] as String?) ?? '',
-      source: (json['source'] as String?) ?? 'manual',
+      source: (json['source'] as String?) ?? sourceManual,
     );
   }
 

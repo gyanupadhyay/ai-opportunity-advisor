@@ -2,6 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:web/web.dart' as web;
 
+import '../constants.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
 import 'chat_input_bar.dart';
@@ -32,12 +33,12 @@ class ChatWidgetState extends State<ChatWidget> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await ApiService.sendMessage('__start__');
+      final response = await ApiService.sendMessage(startMessage);
       setState(() {
         _messages.add(
           ChatMessage(
             content: response.reply,
-            role: 'assistant',
+            role: roleAssistant,
             opportunities: response.opportunities,
           ),
         );
@@ -52,7 +53,7 @@ class ChatWidgetState extends State<ChatWidget> {
                 'discovering scholarships, internships, fellowships, and global '
                 'opportunities.\n\n'
                 'Let\u{2019}s start \u{2014} which country are you from?',
-            role: 'assistant',
+            role: roleAssistant,
           ),
         );
         _isLoading = false;
@@ -80,7 +81,7 @@ class ChatWidgetState extends State<ChatWidget> {
     if (text.isEmpty || _isLoading) return;
 
     setState(() {
-      _messages.add(ChatMessage(content: text, role: 'user'));
+      _messages.add(ChatMessage(content: text, role: roleUser));
       _isLoading = true;
     });
 
@@ -92,7 +93,7 @@ class ChatWidgetState extends State<ChatWidget> {
       _messages.add(
         ChatMessage(
           content: response.reply,
-          role: 'assistant',
+          role: roleAssistant,
           opportunities: response.opportunities,
         ),
       );
@@ -150,7 +151,7 @@ class ChatWidgetState extends State<ChatWidget> {
   List<String> _getQuickReplies() {
     if (_isLoading || _messages.isEmpty) return [];
     final last = _messages.last;
-    if (last.role != 'assistant') return [];
+    if (last.role != roleAssistant) return [];
 
     final lower = last.content.toLowerCase();
     for (final entry in _quickReplyMap.entries) {
@@ -171,7 +172,7 @@ class ChatWidgetState extends State<ChatWidget> {
               span([]),
               span([]),
             ]),
-            .text('Pathora AI is thinking...'),
+            .text('$appName is thinking...'),
           ]),
       ]),
       if (_getQuickReplies().isNotEmpty)

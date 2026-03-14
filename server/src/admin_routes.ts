@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { db, admin } from "./firebase";
+import { COLLECTION_OPPORTUNITIES } from "./config";
 
 const router = Router();
 
@@ -23,7 +24,7 @@ router.use(authMiddleware);
 
 router.get("/opportunities", async (_req: Request, res: Response) => {
   try {
-    const snapshot = await db.collection("opportunities").orderBy("title").get();
+    const snapshot = await db.collection(COLLECTION_OPPORTUNITIES).orderBy("title").get();
     const opportunities = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -59,7 +60,7 @@ router.post("/opportunities", async (req: Request, res: Response) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    const ref = await db.collection("opportunities").add(data);
+    const ref = await db.collection(COLLECTION_OPPORTUNITIES).add(data);
     res.status(201).json({ id: ref.id, ...data });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
@@ -69,7 +70,7 @@ router.post("/opportunities", async (req: Request, res: Response) => {
 router.put("/opportunities/:id", async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    const docRef = db.collection("opportunities").doc(id);
+    const docRef = db.collection(COLLECTION_OPPORTUNITIES).doc(id);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -99,7 +100,7 @@ router.put("/opportunities/:id", async (req: Request, res: Response) => {
 router.delete("/opportunities/:id", async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    const docRef = db.collection("opportunities").doc(id);
+    const docRef = db.collection(COLLECTION_OPPORTUNITIES).doc(id);
     const doc = await docRef.get();
 
     if (!doc.exists) {

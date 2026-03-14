@@ -2,6 +2,8 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
 
+import '../constants.dart';
+
 class HomePage extends StatelessComponent {
   const HomePage({super.key});
 
@@ -10,7 +12,7 @@ class HomePage extends StatelessComponent {
     return div(classes: 'landing-page', [
       div(classes: 'landing-content', [
         div(classes: 'landing-icon', [.text('\u{1F9ED}')]),
-        h1(classes: 'landing-title', [.text('Pathora AI')]),
+        h1(classes: 'landing-title', [.text(appName)]),
         p(classes: 'landing-description', [
           .text(
             'Your AI-powered guide to scholarships, internships, fellowships, '
@@ -27,7 +29,7 @@ class HomePage extends StatelessComponent {
           span(classes: 'feature-tag', [.text('\u{2708}\u{FE0F} Exchange Programs')]),
         ]),
         Link(
-          to: '/chat',
+          to: routeChat,
           child: span(classes: 'start-chat-btn', [
             .text('Start Exploring \u{2192}'),
           ]),

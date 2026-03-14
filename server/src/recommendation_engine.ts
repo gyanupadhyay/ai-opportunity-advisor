@@ -5,6 +5,7 @@ import {
   generateResponse,
 } from "./services/ai_service";
 import { queryOpportunities } from "./services/opportunity_service";
+import { PROFILE_EXTRACT_AFTER, PROFILE_HINT_AFTER } from "./config";
 
 export interface RecommendationResult {
   reply: string;
@@ -24,7 +25,7 @@ export async function processConversation(
 
   const userMsgCount = history.filter((m) => m.role === "user").length;
 
-  if (!profile?.isComplete && userMsgCount >= 3) {
+  if (!profile?.isComplete && userMsgCount >= PROFILE_EXTRACT_AFTER) {
     profile = await extractProfile(history);
   }
 
@@ -42,7 +43,7 @@ export async function processConversation(
       JSON.stringify(opportunities, null, 2);
   }
 
-  if (profile && !profile.isComplete && userMsgCount >= 2) {
+  if (profile && !profile.isComplete && userMsgCount >= PROFILE_HINT_AFTER) {
     systemContent +=
       `\n\nPARTIAL STUDENT PROFILE (gathered so far):\n${JSON.stringify(profile, null, 2)}\n` +
       "Continue asking about the remaining missing fields.";

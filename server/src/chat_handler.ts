@@ -6,6 +6,7 @@ import {
 } from "./services/user_service";
 import { processConversation } from "./recommendation_engine";
 import { ConversationState } from "./models/user_model";
+import { START_MESSAGE } from "./config";
 
 export async function handleChatMessage(
   req: Request,
@@ -19,7 +20,7 @@ export async function handleChatMessage(
   }
 
   try {
-    const isStart = message === "__start__";
+    const isStart = message === START_MESSAGE;
 
     const state: ConversationState = isStart
       ? { messages: [], profile: null, profileQueried: false }

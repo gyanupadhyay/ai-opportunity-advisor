@@ -4,6 +4,12 @@ import {
   ConversationMessage,
   DEFAULT_PROFILE,
 } from "../models/user_model";
+import {
+  AI_MODEL,
+  AI_TEMPERATURE,
+  AI_MAX_TOKENS_RESPONSE,
+  AI_MAX_TOKENS_EXTRACTION,
+} from "../config";
 
 const SYSTEM_PROMPT = `You are Pathora AI, an intelligent advisor that helps students discover global opportunities such as scholarships, internships, fellowships, research programs, exchange programs, and international summits.
 
@@ -103,10 +109,10 @@ export async function generateResponse(
   }> = [{ role: "system", content: systemContent }, ...history];
 
   const completion = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: AI_MODEL,
     messages,
-    temperature: 0.7,
-    max_tokens: 1500,
+    temperature: AI_TEMPERATURE,
+    max_tokens: AI_MAX_TOKENS_RESPONSE,
   });
 
   return (
@@ -129,13 +135,13 @@ export async function extractProfile(
       .join("\n");
 
     const extraction = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: AI_MODEL,
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         { role: "user", content: transcript },
       ],
       temperature: 0,
-      max_tokens: 300,
+      max_tokens: AI_MAX_TOKENS_EXTRACTION,
     });
 
     const raw = extraction.choices[0]?.message?.content ?? "{}";

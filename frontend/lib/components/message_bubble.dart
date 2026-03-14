@@ -1,6 +1,7 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
+import '../constants.dart';
 import '../models/message.dart';
 import 'opportunity_card.dart';
 
@@ -11,7 +12,7 @@ class MessageBubble extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    final isUser = message.role == 'user';
+    final isUser = message.role == roleUser;
 
     return div(classes: 'message-row ${message.role}', [
       div(classes: 'message-avatar', [

@@ -2,6 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:web/web.dart' as web;
 
+import '../constants.dart';
 import '../models/opportunity.dart';
 
 class OpportunityForm extends StatefulComponent {
@@ -28,16 +29,16 @@ class _OpportunityFormState extends State<OpportunityForm> {
   final _descKey = GlobalNodeKey<web.HTMLTextAreaElement>();
   final _linkKey = GlobalNodeKey<web.HTMLInputElement>();
 
-  String _type = 'scholarship';
-  String _educationLevel = 'any';
+  String _type = typeScholarship;
+  String _educationLevel = levelAny;
 
   @override
   void initState() {
     super.initState();
     final e = component.existing;
     if (e != null) {
-      _type = e.type.isNotEmpty ? e.type : 'scholarship';
-      _educationLevel = e.educationLevel.isNotEmpty ? e.educationLevel : 'any';
+      _type = e.type.isNotEmpty ? e.type : typeScholarship;
+      _educationLevel = e.educationLevel.isNotEmpty ? e.educationLevel : levelAny;
     }
   }
 
@@ -80,10 +81,7 @@ class _OpportunityFormState extends State<OpportunityForm> {
         div(classes: 'form-group', [
           label([.text('Type')]),
           select([
-            for (final t in [
-              'scholarship', 'internship', 'fellowship',
-              'research', 'exchange', 'summit',
-            ])
+            for (final t in opportunityTypes)
               option(
                 value: t,
                 selected: t == _type,
@@ -104,7 +102,7 @@ class _OpportunityFormState extends State<OpportunityForm> {
         div(classes: 'form-group', [
           label([.text('Education Level')]),
           select([
-            for (final lvl in ['any', 'undergraduate', 'graduate', 'phd'])
+            for (final lvl in educationLevels)
               option(
                 value: lvl,
                 selected: lvl == _educationLevel,

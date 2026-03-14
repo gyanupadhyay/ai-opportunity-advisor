@@ -14,8 +14,8 @@ User  →  Jaspr Web App (Firebase Hosting)  →  Express API (Render)  →  Gro
 
 | Layer | Technology | Hosting |
 |-------|-----------|---------|
-| Frontend | Jaspr (Dart → JS) | Firebase Hosting (free Spark plan) |
-| Backend | Express.js + TypeScript | Render (free tier) |
+| Frontend | Jaspr (Dart → JS SPA) | Firebase Hosting (free Spark plan) |
+| Backend API | Express.js + TypeScript | Render (free tier) |
 | AI Model | Groq — Llama 3.3 70B Versatile | Groq API (free tier) |
 | Database | Cloud Firestore | Firebase (free Spark plan) |
 
@@ -27,7 +27,9 @@ User  →  Jaspr Web App (Firebase Hosting)  →  Express API (Render)  →  Gro
 - **Quick reply chips** — clickable options appear for common questions (education level, field, region, etc.)
 - **Opportunity matching** — recommends scholarships, internships, fellowships, and more from Firestore
 - **Voice input** — click the mic button to speak your answer (Chrome, Edge, Safari)
-- **Responsive UI** — fluid scaling with `clamp()`, `dvh`, and `min()` for all screen sizes
+- **Admin panel** — password-protected `/admin` UI to add, edit, and delete opportunities in Firestore
+- **AI-powered seed script** — generate 200+ realistic opportunities using Groq and write them to Firestore
+- **Responsive, animated UI** — fluid scaling with `clamp()`, `dvh`, `min()`, and polished CSS animations (landing, chat, cards, chips)
 
 ---
 
@@ -49,18 +51,21 @@ ai-opportunity-advisor/
 ├── frontend/                   # Jaspr web app (Dart)
 │   ├── lib/
 │   │   ├── components/
-│   │   │   ├── chat_widget.dart       # Main chat UI, message list, quick replies
-│   │   │   ├── chat_input_bar.dart    # Text input + mic + send (isolated state)
-│   │   │   ├── message_bubble.dart    # Single message renderer
-│   │   │   └── opportunity_card.dart  # Opportunity card in chat
+│   │   │   ├── chat_widget.dart        # Main chat UI, message list, quick replies
+│   │   │   ├── chat_input_bar.dart     # Text input + mic + send (isolated state)
+│   │   │   ├── message_bubble.dart     # Single message renderer
+│   │   │   ├── opportunity_card.dart   # Opportunity card in chat
+│   │   │   └── opportunity_form.dart   # Reusable admin add/edit opportunity form
 │   │   ├── pages/
-│   │   │   ├── home_page.dart         # Landing page
-│   │   │   └── chat_page.dart         # Chat page wrapper
-│   │   ├── models/                    # message, opportunity
+│   │   │   ├── home_page.dart          # Landing page
+│   │   │   ├── chat_page.dart          # Chat page wrapper
+│   │   │   └── admin_page.dart         # Admin panel UI (/admin)
+│   │   ├── models/                     # message, opportunity
 │   │   ├── services/
-│   │   │   ├── api_service.dart       # HTTP calls to backend
-│   │   │   └── speech_service.dart    # Web Speech API wrapper
-│   │   ├── app.dart                   # Router setup
+│   │   │   ├── api_service.dart        # HTTP calls to backend (user + admin)
+│   │   │   └── speech_service.dart     # Web Speech API wrapper
+│   │   ├── app.dart                    # Router setup
+│   │   ├── constants.dart              # Frontend-wide constants (routes, roles, types, endpoints)
 │   │   └── main.client.dart
 │   ├── web/
 │   │   ├── index.html
@@ -68,20 +73,26 @@ ai-opportunity-advisor/
 │   └── pubspec.yaml
 ├── server/                     # Express.js backend (for Render deployment)
 │   ├── src/
-│   │   ├── index.ts                   # Express app, routes, /health endpoint
-│   │   ├── chat_handler.ts            # POST /handleChatMessage handler
-│   │   ├── firebase.ts                # Firebase Admin SDK init
-│   │   ├── recommendation_engine.ts   # Firestore opportunity matching
+│   │   ├── index.ts                    # Express app, routes, /health, CORS, rate limiting
+│   │   ├── config.ts                   # Centralised backend config (model, collections, limits, CORS)
+│   │   ├── chat_handler.ts             # POST /handleChatMessage handler
+│   │   ├── firebase.ts                 # Firebase Admin SDK init
+│   │   ├── recommendation_engine.ts    # Conversation orchestration + opportunity matching
+│   │   ├── admin_routes.ts             # /admin/opportunities CRUD (password-protected)
 │   │   ├── services/
-│   │   │   └── ai_service.ts          # Groq API integration
-│   │   └── models/
-│   │       └── user_model.ts          # User profile types
+│   │   │   ├── ai_service.ts           # Groq API integration
+│   │   │   ├── user_service.ts         # Conversation + chat logging in Firestore
+│   │   │   └── opportunity_service.ts  # Firestore queries and filters
+│   │   ├── models/
+│   │   │   ├── user_model.ts           # User profile types
+│   │   │   └── opportunity_model.ts    # Opportunity types + type mapping
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── .env.example
-├── functions/                  # Firebase Cloud Functions (alternative backend)
+├── generate_opportunities.js   # AI-powered Firestore opportunity seeder using Groq
+├── functions/                  # Firebase Cloud Functions (alternative backend, optional)
 │   ├── src/
-│   │   └── ...                        # Same logic as server/, for Firebase deploy
+│   │   └── ...                        # Older logic, kept for reference
 │   ├── package.json
 │   └── .env.example
 ├── firebase.json               # Firebase Hosting + Firestore config
@@ -119,27 +130,44 @@ Edit `server/.env` and set:
 
 ```
 GROQ_API_KEY=gsk_your-groq-api-key-here
-PORT=8080
+PORT=3000
+ADMIN_PASSWORD=your-admin-password-here
 FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
+
+# CORS — comma-separated allowed origins (localhost is always included by default)
+CORS_ORIGINS=https://your-hosted-frontend.web.app,https://your-hosted-frontend.firebaseapp.com
+
+# Rate limiting for the chat endpoint
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=30
+
+# AI model tuning (optional overrides)
+AI_MODEL=llama-3.3-70b-versatile
+AI_TEMPERATURE=0.7
 ```
 
-- **Groq API key** — get one free at https://console.groq.com
-- **Firebase service account** — download from Firebase Console > Project Settings > Service Accounts > Generate new private key, then paste the entire JSON as a single line
+- **Groq API key** — get one free at https://console.groq.com  
+- **Firebase service account** — download from Firebase Console > Project Settings > Service Accounts > Generate new private key, then paste the entire JSON as a single line  
+- **ADMIN_PASSWORD** — simple shared password required to access `/admin` and perform CRUD on opportunities
 
-### 3. Seed Firestore with Sample Data
+### 3. Seed Firestore with Sample / AI-Generated Data
+
+You have two options:
+
+- **Legacy sample seeder**: `seed_firestore.js` (small, fixed dataset)  
+- **AI-powered seeder**: `generate_opportunities.js` (recommended — 200+ realistic opportunities)
 
 ```bash
-# Install firebase-admin at root (if not already)
-npm install firebase-admin
+# Install firebase-admin and groq-sdk at root (if not already)
+npm install firebase-admin groq-sdk dotenv
 
-# Set environment for emulator or production
-# For production Firestore:
+# Ensure GROQ_API_KEY and FIREBASE_SERVICE_ACCOUNT are set (from server/.env)
+
+# AI-powered seeding (recommended)
+node generate_opportunities.js
+
+# Or legacy seeding (small sample set)
 node seed_firestore.js
-
-# For local emulator:
-# set FIRESTORE_EMULATOR_HOST=127.0.0.1:8081  (PowerShell: $env:FIRESTORE_EMULATOR_HOST = "127.0.0.1:8081")
-# set GCLOUD_PROJECT=demo-opportunity-advisor   (PowerShell: $env:GCLOUD_PROJECT = "demo-opportunity-advisor")
-# node seed_firestore.js
 ```
 
 ### 4. Start the Backend
@@ -149,19 +177,20 @@ cd server
 npm run build && npm start
 ```
 
-The API will be available at `http://localhost:8080`. Test with:
+The API will be available at `http://localhost:3000` (or the `PORT` you set). Test with:
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:3000/health
 ```
 
 ### 5. Start the Frontend
 
 ```bash
 cd frontend
-jaspr serve --dart-define=API_BASE_URL=http://localhost:8080
+jaspr serve --dart-define=API_BASE_URL=http://localhost:3000
 ```
 
-Open http://localhost:8080 (Jaspr picks the next available port if 8080 is taken).
+By default Jaspr serves the frontend on `http://localhost:8080` (or the next free port).  
+The frontend always calls the backend using the `API_BASE_URL` you pass via `--dart-define`.
 
 ---
 
@@ -205,8 +234,14 @@ firebase deploy --only hosting
 |----------|-------|-------------|
 | `GROQ_API_KEY` | `server/.env` | Groq API key (free at console.groq.com) |
 | `FIREBASE_SERVICE_ACCOUNT` | `server/.env` | Firebase service account JSON (single line) |
-| `PORT` | `server/.env` | Server port (default: 8080) |
-| `API_BASE_URL` | Dart `--dart-define` | Backend URL passed to frontend at build time |
+| `PORT` | `server/.env` | Server port (default: `3000`) |
+| `ADMIN_PASSWORD` | `server/.env` | Password required for `/admin` CRUD endpoints |
+| `CORS_ORIGINS` | `server/.env` | Extra allowed origins for CORS (comma-separated, frontend hosting URLs) |
+| `RATE_LIMIT_WINDOW_MS` | `server/.env` | Rate limit window for the chat endpoint (default `60000` ms) |
+| `RATE_LIMIT_MAX` | `server/.env` | Max requests per window per IP for chat endpoint (default `30`) |
+| `AI_MODEL` | `server/.env` | Optional override for Groq model name (defaults to `llama-3.3-70b-versatile`) |
+| `AI_TEMPERATURE` | `server/.env` | Optional override for model temperature (defaults to `0.7`) |
+| `API_BASE_URL` | Dart `--dart-define` | Backend base URL passed to frontend at build time |
 
 ---
 
@@ -217,13 +252,15 @@ firebase deploy --only hosting
 | Field | Type | Description |
 |-------|------|-------------|
 | title | string | Opportunity name |
-| type | string | scholarship, internship, fellowship, summit, exchange |
+| type | string | `scholarship`, `internship`, `fellowship`, `research`, `exchange`, `summit` |
 | country | string | Country or region |
 | field | string | Field of study |
-| educationLevel | string | undergraduate, graduate, phd, any |
+| educationLevel | string | `undergraduate`, `graduate`, `phd`, `any` |
 | deadline | string | Application deadline |
 | description | string | Short description |
 | applicationLink | string | URL to apply |
+| source | string | `ai-generated` or `manual` |
+| createdAt | timestamp | Server timestamp (when document was created) |
 
 ### `chats`
 
@@ -231,8 +268,17 @@ firebase deploy --only hosting
 |-------|------|-------------|
 | userId | string | Session identifier |
 | message | string | Message content |
-| role | string | "user" or "assistant" |
+| role | string | `"user"` or `"assistant"` |
 | timestamp | timestamp | Server timestamp |
+
+### `conversations`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| messages | array | Full chat history (role + content) for the session |
+| profile | object | Structured student profile inferred by the AI |
+| profileQueried | bool | Whether Firestore has already been queried for this profile |
+| updatedAt | timestamp | Last update time (server timestamp) |
 
 ---
 

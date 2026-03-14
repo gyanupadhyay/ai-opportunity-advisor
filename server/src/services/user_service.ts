@@ -1,10 +1,11 @@
 import { db, admin } from "../firebase";
 import { ConversationState } from "../models/user_model";
+import { COLLECTION_CONVERSATIONS, COLLECTION_CHATS } from "../config";
 
 export async function loadConversation(
   sessionId: string
 ): Promise<ConversationState> {
-  const doc = await db.collection("conversations").doc(sessionId).get();
+  const doc = await db.collection(COLLECTION_CONVERSATIONS).doc(sessionId).get();
 
   if (doc.exists) {
     const data = doc.data()!;
@@ -22,7 +23,7 @@ export async function saveConversation(
   sessionId: string,
   state: ConversationState
 ): Promise<void> {
-  await db.collection("conversations").doc(sessionId).set({
+  await db.collection(COLLECTION_CONVERSATIONS).doc(sessionId).set({
     messages: state.messages,
     profile: state.profile,
     profileQueried: state.profileQueried,
@@ -35,7 +36,7 @@ export async function logMessage(
   message: string,
   role: "user" | "assistant"
 ): Promise<void> {
-  await db.collection("chats").add({
+  await db.collection(COLLECTION_CHATS).add({
     userId: sessionId,
     message,
     role,

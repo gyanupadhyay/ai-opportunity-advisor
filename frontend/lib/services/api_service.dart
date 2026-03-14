@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../constants.dart';
 import '../models/opportunity.dart';
 
 class ApiResponse {
@@ -25,7 +26,7 @@ class ApiService {
   static Future<ApiResponse> sendMessage(String message) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/handleChatMessage'),
+        Uri.parse('$_baseUrl$endpointChat'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'sessionId': _sessionId,
@@ -65,7 +66,7 @@ class ApiService {
   static Future<List<Opportunity>> adminListOpportunities(
       String password) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/admin/opportunities'),
+      Uri.parse('$_baseUrl$endpointAdminOpportunities'),
       headers: {'Authorization': 'Bearer $password'},
     );
 
@@ -82,7 +83,7 @@ class ApiService {
   static Future<void> adminCreateOpportunity(
       String password, Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/admin/opportunities'),
+      Uri.parse('$_baseUrl$endpointAdminOpportunities'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $password',
@@ -98,7 +99,7 @@ class ApiService {
   static Future<void> adminUpdateOpportunity(
       String password, String id, Map<String, dynamic> data) async {
     final response = await http.put(
-      Uri.parse('$_baseUrl/admin/opportunities/$id'),
+      Uri.parse('$_baseUrl$endpointAdminOpportunities/$id'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $password',
@@ -114,7 +115,7 @@ class ApiService {
   static Future<void> adminDeleteOpportunity(
       String password, String id) async {
     final response = await http.delete(
-      Uri.parse('$_baseUrl/admin/opportunities/$id'),
+      Uri.parse('$_baseUrl$endpointAdminOpportunities/$id'),
       headers: {'Authorization': 'Bearer $password'},
     );
 
