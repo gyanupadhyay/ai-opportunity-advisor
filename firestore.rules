@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Opportunities: anyone can read, only admin can write
+    match /opportunities/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Chats: read/write allowed (MVP — tighten with auth later)
+    match /chats/{docId} {
+      allow read, write: if true;
+    }
+
+    // Users: read/write allowed (MVP — tighten with auth later)
+    match /users/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment variables (never commit real keys)
+.env
+!.env.example
+
+# Build outputs
+functions/lib/
+server/dist/
+frontend/build/
+
+# Firebase
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+*-debug.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
