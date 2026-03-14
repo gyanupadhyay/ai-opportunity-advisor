@@ -66,7 +66,12 @@ class ChatWidgetState extends State<ChatWidget> {
     Future.delayed(const Duration(milliseconds: 60), () {
       final container = _messagesKey.currentNode;
       if (container != null) {
-        container.scrollTop = container.scrollHeight.toDouble();
+        container.scrollTo(
+          web.ScrollToOptions(
+            top: container.scrollHeight.toDouble(),
+            behavior: 'smooth',
+          ),
+        );
       }
     });
   }
