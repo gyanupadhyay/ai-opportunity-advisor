@@ -4,7 +4,7 @@ import 'package:web/web.dart' as web;
 
 import '../models/message.dart';
 import '../services/api_service.dart';
-import '../services/speech_service.dart';
+import 'chat_input_bar.dart';
 import 'message_bubble.dart';
 
 class ChatWidget extends StatefulComponent {
@@ -17,11 +17,7 @@ class ChatWidget extends StatefulComponent {
 class ChatWidgetState extends State<ChatWidget> {
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
-  bool _isRecording = false;
-  String _currentInput = '';
 
-  final SpeechService _speechService = SpeechService();
-  final GlobalNodeKey<web.HTMLInputElement> _inputKey = GlobalNodeKey();
   final GlobalNodeKey<web.HTMLDivElement> _messagesKey = GlobalNodeKey();
 
   @override
@@ -75,13 +71,8 @@ class ChatWidgetState extends State<ChatWidget> {
     });
   }
 
-  Future<void> _sendMessage([String? prefilled]) async {
-    final text = prefilled ?? _currentInput.trim();
+  Future<void> _sendMessage(String text) async {
     if (text.isEmpty || _isLoading) return;
-
-    final inputEl = _inputKey.currentNode;
-    if (inputEl != null) inputEl.value = '';
-    _currentInput = '';
 
     setState(() {
       _messages.add(ChatMessage(content: text, role: 'user'));
@@ -163,33 +154,6 @@ class ChatWidgetState extends State<ChatWidget> {
     return [];
   }
 
-  void _toggleMic() {
-    if (!_speechService.isSupported || _isLoading) return;
-
-    if (_isRecording) {
-      _speechService.stop();
-      setState(() => _isRecording = false);
-      return;
-    }
-
-    setState(() => _isRecording = true);
-
-    _speechService.start(
-      onResult: (transcript) {
-        final inputEl = _inputKey.currentNode;
-        if (inputEl != null) inputEl.value = transcript;
-        _currentInput = transcript;
-        _sendMessage();
-      },
-      onEnd: () {
-        setState(() => _isRecording = false);
-      },
-      onError: (error) {
-        setState(() => _isRecording = false);
-      },
-    );
-  }
-
   @override
   Component build(BuildContext context) {
     return .fragment([
@@ -214,40 +178,7 @@ class ChatWidgetState extends State<ChatWidget> {
               [.text(option)],
             ),
         ]),
-      div(classes: 'chat-input-area', [
-        input<String>(
-          key: _inputKey,
-          classes: 'chat-input',
-          type: InputType.text,
-          attributes: {
-            'placeholder': _isRecording ? 'Listening...' : 'Type your answer...',
-          },
-          onInput: (value) {
-            _currentInput = value;
-          },
-          events: {
-            'keydown': (event) {
-              final ke = event as web.KeyboardEvent;
-              if (ke.key == 'Enter' && !_isLoading) {
-                _sendMessage();
-              }
-            },
-          },
-        ),
-        if (_speechService.isSupported)
-          button(
-            classes: 'mic-btn${_isRecording ? ' recording' : ''}',
-            disabled: _isLoading,
-            onClick: _toggleMic,
-            [.text(_isRecording ? '\u{23F9}' : '\u{1F3A4}')],
-          ),
-        button(
-          classes: 'send-btn',
-          disabled: _isLoading,
-          onClick: () => _sendMessage(),
-          [.text('Send \u{27A4}')],
-        ),
-      ]),
+      ChatInputBar(onSend: _sendMessage, isLoading: _isLoading),
     ]);
   }
 }

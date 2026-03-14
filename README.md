@@ -1,16 +1,33 @@
-# AI Opportunity Advisor
+# AI Opportunity Advisor (Pathora AI)
 
-An AI-powered chatbot that helps students discover scholarships, internships, fellowships, exchange programs, and global opportunities.
+An AI-powered chatbot that helps students discover scholarships, internships, fellowships, exchange programs, and global opportunities through a conversational interface with smart quick-reply suggestions.
 
-**Tech Stack:** Jaspr (Dart) frontend, Firebase backend (Cloud Functions + Firestore), OpenAI API, Web Speech API for voice input.
+**Tech Stack:** Jaspr (Dart) frontend, Express.js backend, Groq AI (Llama 3.3 70B), Firebase Firestore, Web Speech API for voice input.
 
 ---
 
 ## Architecture
 
 ```
-User  →  Jaspr Web App  →  Firebase Cloud Function  →  OpenAI  →  Firestore  →  Response
+User  →  Jaspr Web App (Firebase Hosting)  →  Express API (Render)  →  Groq AI + Firestore  →  Response
 ```
+
+| Layer | Technology | Hosting |
+|-------|-----------|---------|
+| Frontend | Jaspr (Dart → JS) | Firebase Hosting (free Spark plan) |
+| Backend | Express.js + TypeScript | Render (free tier) |
+| AI Model | Groq — Llama 3.3 70B Versatile | Groq API (free tier) |
+| Database | Cloud Firestore | Firebase (free Spark plan) |
+
+---
+
+## Features
+
+- **Conversational onboarding** — the AI asks about your country, education level, field of study, and interests
+- **Quick reply chips** — clickable options appear for common questions (education level, field, region, etc.)
+- **Opportunity matching** — recommends scholarships, internships, fellowships, and more from Firestore
+- **Voice input** — click the mic button to speak your answer (Chrome, Edge, Safari)
+- **Responsive UI** — fluid scaling with `clamp()`, `dvh`, and `min()` for all screen sizes
 
 ---
 
@@ -29,25 +46,50 @@ User  →  Jaspr Web App  →  Firebase Cloud Function  →  OpenAI  →  Firest
 
 ```
 ai-opportunity-advisor/
-├── frontend/               # Jaspr web app (Dart)
+├── frontend/                   # Jaspr web app (Dart)
 │   ├── lib/
-│   │   ├── components/     # chat_widget, message_bubble, opportunity_card
-│   │   ├── pages/          # home_page, chat_page
-│   │   ├── models/         # message, opportunity
-│   │   ├── services/       # chat_service (HTTP), speech_service (Web Speech API)
-│   │   ├── app.dart        # Router setup
+│   │   ├── components/
+│   │   │   ├── chat_widget.dart       # Main chat UI, message list, quick replies
+│   │   │   ├── chat_input_bar.dart    # Text input + mic + send (isolated state)
+│   │   │   ├── message_bubble.dart    # Single message renderer
+│   │   │   └── opportunity_card.dart  # Opportunity card in chat
+│   │   ├── pages/
+│   │   │   ├── home_page.dart         # Landing page
+│   │   │   └── chat_page.dart         # Chat page wrapper
+│   │   ├── models/                    # message, opportunity
+│   │   ├── services/
+│   │   │   ├── api_service.dart       # HTTP calls to backend
+│   │   │   └── speech_service.dart    # Web Speech API wrapper
+│   │   ├── app.dart                   # Router setup
 │   │   └── main.client.dart
-│   ├── web/                # HTML + CSS
+│   ├── web/
+│   │   ├── index.html
+│   │   └── styles.css                 # All styles (responsive, clamp, dvh)
 │   └── pubspec.yaml
-├── functions/              # Firebase Cloud Functions (TypeScript)
-│   ├── src/index.ts        # handleChatMessage function
+├── server/                     # Express.js backend (for Render deployment)
+│   ├── src/
+│   │   ├── index.ts                   # Express app, routes, /health endpoint
+│   │   ├── chat_handler.ts            # POST /handleChatMessage handler
+│   │   ├── firebase.ts                # Firebase Admin SDK init
+│   │   ├── recommendation_engine.ts   # Firestore opportunity matching
+│   │   ├── services/
+│   │   │   └── ai_service.ts          # Groq API integration
+│   │   └── models/
+│   │       └── user_model.ts          # User profile types
 │   ├── package.json
-│   └── tsconfig.json
-├── firebase.json           # Firebase project config
-├── firestore.rules         # Security rules
-├── firestore.indexes.json  # Composite indexes
-├── seed_firestore.js       # Sample data seeder
-└── README.md
+│   ├── tsconfig.json
+│   └── .env.example
+├── functions/                  # Firebase Cloud Functions (alternative backend)
+│   ├── src/
+│   │   └── ...                        # Same logic as server/, for Firebase deploy
+│   ├── package.json
+│   └── .env.example
+├── firebase.json               # Firebase Hosting + Firestore config
+├── firestore.rules             # Security rules
+├── firestore.indexes.json      # Composite indexes
+├── seed_firestore.js           # Sample opportunity data seeder
+├── .firebaserc                 # Firebase project alias
+└── .gitignore
 ```
 
 ---
@@ -60,105 +102,118 @@ ai-opportunity-advisor/
 cd ai-opportunity-advisor
 
 # Install frontend dependencies
-cd frontend
-dart pub get
-cd ..
+cd frontend && dart pub get && cd ..
 
-# Install Cloud Functions dependencies
-cd functions
-npm install
-cd ..
+# Install backend dependencies
+cd server && npm install && cd ..
 ```
 
-### 2. Configure Firebase
-
-```bash
-# Login to Firebase
-firebase login
-
-# Initialize project (select your Firebase project)
-firebase use --add
-
-# Or create a new project
-firebase projects:create my-opportunity-advisor
-firebase use my-opportunity-advisor
-```
-
-### 3. Set OpenAI API Key
+### 2. Configure Environment
 
 ```bash
 # Copy the example env file
-cp functions/.env.example functions/.env
-
-# Edit functions/.env and add your real OpenAI API key
-# OPENAI_API_KEY=sk-your-key-here
+cp server/.env.example server/.env
 ```
 
-For deployed functions, set the secret:
-```bash
-firebase functions:secrets:set OPENAI_API_KEY
+Edit `server/.env` and set:
+
+```
+GROQ_API_KEY=gsk_your-groq-api-key-here
+PORT=8080
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
 ```
 
-### 4. Seed Sample Data
+- **Groq API key** — get one free at https://console.groq.com
+- **Firebase service account** — download from Firebase Console > Project Settings > Service Accounts > Generate new private key, then paste the entire JSON as a single line
 
-Start the Firestore emulator first, then seed:
+### 3. Seed Firestore with Sample Data
 
 ```bash
-# Start emulators
-firebase emulators:start --only firestore
+# Install firebase-admin at root (if not already)
+npm install firebase-admin
 
-# In a new terminal, seed data
-set FIRESTORE_EMULATOR_HOST=127.0.0.1:8081
+# Set environment for emulator or production
+# For production Firestore:
 node seed_firestore.js
+
+# For local emulator:
+# set FIRESTORE_EMULATOR_HOST=127.0.0.1:8081  (PowerShell: $env:FIRESTORE_EMULATOR_HOST = "127.0.0.1:8081")
+# set GCLOUD_PROJECT=demo-opportunity-advisor   (PowerShell: $env:GCLOUD_PROJECT = "demo-opportunity-advisor")
+# node seed_firestore.js
 ```
 
-### 5. Start the Backend (Firebase Emulators)
+### 4. Start the Backend
 
 ```bash
-cd functions
-npm run build
-cd ..
-firebase emulators:start --only functions,firestore
+cd server
+npm run build && npm start
 ```
 
-The Cloud Function will be available at: `http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1/handleChatMessage`
+The API will be available at `http://localhost:8080`. Test with:
+```bash
+curl http://localhost:8080/health
+```
 
-### 6. Start the Frontend (Jaspr Dev Server)
+### 5. Start the Frontend
 
 ```bash
 cd frontend
-jaspr serve
+jaspr serve --dart-define=API_BASE_URL=http://localhost:8080
 ```
 
-Open http://localhost:8080 in your browser.
-
-### 7. Configure API URL
-
-Update the API base URL to point to your local emulator. When running `jaspr serve`, pass:
-
-```bash
-jaspr serve --dart-define=API_BASE_URL=http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1
-```
-
-Replace `YOUR_PROJECT_ID` with your actual Firebase project ID.
+Open http://localhost:8080 (Jaspr picks the next available port if 8080 is taken).
 
 ---
 
-## Voice Input
+## Deployment
 
-The chat interface includes a microphone button that uses the **Web Speech API** for speech-to-text:
+### Frontend — Firebase Hosting
 
-1. Click the microphone button (appears between the input field and Send)
-2. Speak your question — the button pulses red while listening
-3. Your speech is converted to text and automatically sent to the chatbot
+```bash
+# Build the Jaspr frontend (point to your production backend URL)
+cd frontend
+jaspr build --dart-define=API_BASE_URL=https://your-backend-url.onrender.com
+cd ..
 
-**Browser support:** Chrome, Edge, Safari (uses `webkitSpeechRecognition`). Firefox supports the standard `SpeechRecognition` API. The mic button only appears if the browser supports the API.
+# Deploy to Firebase Hosting
+firebase deploy --only hosting
+```
+
+### Backend — Render
+
+1. Push the repo to GitHub
+2. Create a new **Web Service** on [Render](https://render.com) (free tier)
+3. Set the root directory to `server`
+4. Build command: `npm install && npm run build`
+5. Start command: `npm start`
+6. Add environment variables:
+   - `GROQ_API_KEY` — your Groq API key
+   - `FIREBASE_SERVICE_ACCOUNT` — the full service account JSON (single line)
+
+### Firestore — Firebase Console
+
+1. Go to Firebase Console > Build > Firestore Database
+2. Create a database (production mode, any region)
+3. Deploy security rules: `firebase deploy --only firestore:rules`
+4. Deploy indexes: `firebase deploy --only firestore:indexes`
+
+---
+
+## Environment Variables
+
+| Variable | Where | Description |
+|----------|-------|-------------|
+| `GROQ_API_KEY` | `server/.env` | Groq API key (free at console.groq.com) |
+| `FIREBASE_SERVICE_ACCOUNT` | `server/.env` | Firebase service account JSON (single line) |
+| `PORT` | `server/.env` | Server port (default: 8080) |
+| `API_BASE_URL` | Dart `--dart-define` | Backend URL passed to frontend at build time |
 
 ---
 
 ## Firestore Collections
 
 ### `opportunities`
+
 | Field | Type | Description |
 |-------|------|-------------|
 | title | string | Opportunity name |
@@ -171,53 +226,25 @@ The chat interface includes a microphone button that uses the **Web Speech API**
 | applicationLink | string | URL to apply |
 
 ### `chats`
+
 | Field | Type | Description |
 |-------|------|-------------|
-| userId | string | Session/user identifier |
+| userId | string | Session identifier |
 | message | string | Message content |
 | role | string | "user" or "assistant" |
 | timestamp | timestamp | Server timestamp |
 
-### `users`
-| Field | Type | Description |
-|-------|------|-------------|
-| name | string | Student name |
-| email | string | Email address |
-| country | string | Country |
-| field | string | Field of study |
-| interests | array | Areas of interest |
-
 ---
 
-## Deploying to Production
+## Voice Input
 
-### Deploy Cloud Functions
-```bash
-cd functions && npm run build && cd ..
-firebase deploy --only functions
-```
+The chat interface includes a microphone button that uses the **Web Speech API**:
 
-### Build Frontend
-```bash
-cd frontend
-jaspr build
-```
+1. Click the microphone button (between the input field and Send)
+2. Speak your question — the button pulses red while listening
+3. Your speech is converted to text and automatically sent
 
-The built files will be in `frontend/build/jaspr/`. Deploy them to Firebase Hosting or any static host.
-
-### Deploy Everything
-```bash
-firebase deploy
-```
-
----
-
-## Environment Variables
-
-| Variable | Where | Description |
-|----------|-------|-------------|
-| `OPENAI_API_KEY` | `functions/.env` | Your OpenAI API key |
-| `API_BASE_URL` | Dart define | Firebase Functions URL |
+**Browser support:** Chrome, Edge, Safari. The mic button only appears if the browser supports the API.
 
 ---
 
