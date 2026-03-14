@@ -1,4 +1,5 @@
 export interface Opportunity {
+  id?: string;
   title: string;
   type: string;
   country: string;
@@ -7,6 +8,8 @@ export interface Opportunity {
   deadline: string;
   description: string;
   applicationLink: string;
+  source?: string;
+  createdAt?: unknown;
 }
 
 export const OPPORTUNITY_TYPE_MAP: Record<string, string> = {

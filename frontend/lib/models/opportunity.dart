@@ -1,4 +1,5 @@
 class Opportunity {
+  final String id;
   final String title;
   final String type;
   final String country;
@@ -7,8 +8,10 @@ class Opportunity {
   final String deadline;
   final String description;
   final String applicationLink;
+  final String source;
 
   const Opportunity({
+    this.id = '',
     required this.title,
     required this.type,
     this.country = '',
@@ -17,10 +20,12 @@ class Opportunity {
     this.deadline = '',
     this.description = '',
     this.applicationLink = '',
+    this.source = 'manual',
   });
 
   factory Opportunity.fromJson(Map<String, dynamic> json) {
     return Opportunity(
+      id: (json['id'] as String?) ?? '',
       title: (json['title'] as String?) ?? '',
       type: (json['type'] as String?) ?? '',
       country: (json['country'] as String?) ?? '',
@@ -29,6 +34,18 @@ class Opportunity {
       deadline: (json['deadline'] as String?) ?? '',
       description: (json['description'] as String?) ?? '',
       applicationLink: (json['applicationLink'] as String?) ?? '',
+      source: (json['source'] as String?) ?? 'manual',
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'type': type,
+        'country': country,
+        'field': field,
+        'educationLevel': educationLevel,
+        'deadline': deadline,
+        'description': description,
+        'applicationLink': applicationLink,
+      };
 }

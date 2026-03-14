@@ -2,9 +2,10 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleChatMessage } from "./chat_handler";
+import adminRoutes from "./admin_routes";
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -45,6 +46,7 @@ app.get("/health", async (_req, res) => {
 });
 
 app.post("/handleChatMessage", handleChatMessage);
+app.use("/admin", adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
