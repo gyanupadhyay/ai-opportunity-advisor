@@ -16,20 +16,20 @@ app.get("/", (_req, res) => {
 app.get("/health", async (_req, res) => {
   const checks: Record<string, string> = {};
 
-  checks.geminiKey = process.env.GEMINI_API_KEY ? "set" : "MISSING";
+  checks.groqKey = process.env.GROQ_API_KEY ? "set" : "MISSING";
   checks.firebaseServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? "set" : "MISSING";
 
   try {
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-    const r = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: "Reply with OK",
-      config: { maxOutputTokens: 10 },
+    const Groq = (await import("groq-sdk")).default;
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+    const r = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: "Reply with OK" }],
+      max_tokens: 10,
     });
-    checks.geminiApi = r.text ? "ok" : "empty response";
+    checks.groqApi = r.choices[0]?.message?.content ? "ok" : "empty response";
   } catch (e: any) {
-    checks.geminiApi = `ERROR: ${e.message}`;
+    checks.groqApi = `ERROR: ${e.message}`;
   }
 
   try {

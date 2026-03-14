@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 import {
   StudentProfile,
   ConversationMessage,
@@ -74,15 +74,15 @@ Return ONLY a valid JSON object with these fields (use null for anything not yet
 
 Note: "interests" is helpful but not required for isComplete. Mark isComplete as true when the five core fields (country, educationLevel, field, opportunityType, preferredRegion) are all non-null.`;
 
-let _client: GoogleGenAI | null = null;
+let _client: Groq | null = null;
 
-function getClient(): GoogleGenAI {
+function getClient(): Groq {
   if (!_client) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY environment variable is not set");
+      throw new Error("GROQ_API_KEY environment variable is not set");
     }
-    _client = new GoogleGenAI({ apiKey });
+    _client = new Groq({ apiKey });
   }
   return _client;
 }
@@ -95,25 +95,22 @@ export async function generateResponse(
   history: ConversationMessage[],
   systemContent: string
 ): Promise<string> {
-  const ai = getClient();
+  const groq = getClient();
 
-  const contents = history.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
+  const messages: Array<{
+    role: "system" | "user" | "assistant";
+    content: string;
+  }> = [{ role: "system", content: systemContent }, ...history];
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents,
-    config: {
-      systemInstruction: systemContent,
-      temperature: 0.7,
-      maxOutputTokens: 1500,
-    },
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages,
+    temperature: 0.7,
+    max_tokens: 1500,
   });
 
   return (
-    response.text ??
+    completion.choices[0]?.message?.content ??
     "Hi! I'm Pathora AI. I help students discover scholarships and global opportunities. Which country are you from?"
   );
 }
@@ -121,7 +118,7 @@ export async function generateResponse(
 export async function extractProfile(
   history: ConversationMessage[]
 ): Promise<StudentProfile> {
-  const ai = getClient();
+  const groq = getClient();
 
   try {
     const transcript = history
@@ -131,17 +128,17 @@ export async function extractProfile(
       )
       .join("\n");
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: transcript,
-      config: {
-        systemInstruction: EXTRACTION_PROMPT,
-        temperature: 0,
-        maxOutputTokens: 300,
-      },
+    const extraction = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: EXTRACTION_PROMPT },
+        { role: "user", content: transcript },
+      ],
+      temperature: 0,
+      max_tokens: 300,
     });
 
-    const raw = response.text ?? "{}";
+    const raw = extraction.choices[0]?.message?.content ?? "{}";
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return { ...DEFAULT_PROFILE };
 
