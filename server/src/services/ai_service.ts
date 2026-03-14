@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import {
   StudentProfile,
   ConversationMessage,
@@ -74,15 +74,15 @@ Return ONLY a valid JSON object with these fields (use null for anything not yet
 
 Note: "interests" is helpful but not required for isComplete. Mark isComplete as true when the five core fields (country, educationLevel, field, opportunityType, preferredRegion) are all non-null.`;
 
-let _client: OpenAI | null = null;
+let _client: GoogleGenAI | null = null;
 
-function getClient(): OpenAI {
+function getClient(): GoogleGenAI {
   if (!_client) {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set");
+      throw new Error("GEMINI_API_KEY environment variable is not set");
     }
-    _client = new OpenAI({ apiKey });
+    _client = new GoogleGenAI({ apiKey });
   }
   return _client;
 }
@@ -95,22 +95,25 @@ export async function generateResponse(
   history: ConversationMessage[],
   systemContent: string
 ): Promise<string> {
-  const openai = getClient();
+  const ai = getClient();
 
-  const messages: Array<{
-    role: "system" | "user" | "assistant";
-    content: string;
-  }> = [{ role: "system", content: systemContent }, ...history];
+  const contents = history.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    messages,
-    temperature: 0.7,
-    max_tokens: 1500,
+  const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents,
+    config: {
+      systemInstruction: systemContent,
+      temperature: 0.7,
+      maxOutputTokens: 1500,
+    },
   });
 
   return (
-    completion.choices[0]?.message?.content ??
+    response.text ??
     "Hi! I'm Pathora AI. I help students discover scholarships and global opportunities. Which country are you from?"
   );
 }
@@ -118,7 +121,7 @@ export async function generateResponse(
 export async function extractProfile(
   history: ConversationMessage[]
 ): Promise<StudentProfile> {
-  const openai = getClient();
+  const ai = getClient();
 
   try {
     const transcript = history
@@ -128,17 +131,17 @@ export async function extractProfile(
       )
       .join("\n");
 
-    const extraction = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: EXTRACTION_PROMPT },
-        { role: "user", content: transcript },
-      ],
-      temperature: 0,
-      max_tokens: 300,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: transcript,
+      config: {
+        systemInstruction: EXTRACTION_PROMPT,
+        temperature: 0,
+        maxOutputTokens: 300,
+      },
     });
 
-    const raw = extraction.choices[0]?.message?.content ?? "{}";
+    const raw = response.text ?? "{}";
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return { ...DEFAULT_PROFILE };
 
