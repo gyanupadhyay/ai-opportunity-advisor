@@ -1,12 +1,12 @@
 # Firestore Database Schema
 
-This document describes the Firestore collections used by Pathora AI.
+This document describes the Firestore collections used by Pragya AI.
 
 ---
 
 ## Collection: `opportunities`
 
-Stores the global opportunities that Pathora AI recommends to students.
+Stores the global opportunities that Pragya AI recommends to students.
 
 | Field           | Type   | Description                                          |
 |-----------------|--------|------------------------------------------------------|

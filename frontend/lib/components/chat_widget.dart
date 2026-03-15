@@ -28,7 +28,7 @@ class ChatWidgetState extends State<ChatWidget> {
     _startConversation();
   }
 
-  /// Sends a hidden "__start__" message so the Pathora AI advisor generates
+  /// Sends a hidden "__start__" message so the Pragya AI advisor generates
   /// its opening greeting and first onboarding question.
   Future<void> _startConversation() async {
     setState(() => _isLoading = true);
@@ -63,7 +63,7 @@ class ChatWidgetState extends State<ChatWidget> {
         _messages.add(
           ChatMessage(
             content:
-                '$greeting I\u{2019}m Pathora AI, your personal guide to '
+                '$greeting I\u{2019}m Pragya AI, your personal guide to '
                 'discovering scholarships, internships, fellowships, and global '
                 'opportunities.\n\n'
                 'Let\u{2019}s start \u{2014} which country are you from?',

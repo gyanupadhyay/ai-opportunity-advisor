@@ -3,7 +3,7 @@
 /// across multiple files.
 
 // ─── App Identity ────────────────────────────────────────────────────────────
-const String appName = 'Pathora AI';
+const String appName = 'Pragya AI';
 
 // ─── Protocol ────────────────────────────────────────────────────────────────
 const String startMessage = '__start__';
