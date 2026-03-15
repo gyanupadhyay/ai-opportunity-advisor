@@ -319,10 +319,10 @@ The site is set up for search and social sharing:
 
 To improve Google visibility:
 
-1. **Google Search Console**: Add property `https://ai-opportunity-advisor.web.app`, verify ownership, then submit the sitemap: `https://ai-opportunity-advisor.web.app/sitemap.xml`
+1. **Google Search Console**: Add property `https://ai-opportunity-advisor.web.app`, verify ownership, then submit the sitemap: **`https://ai-opportunity-advisor.onrender.com/sitemap.xml`** (served by the backend so GSC can always fetch it; the sitemap still lists your Firebase Hosting URLs).
 2. **Social image**: Add `frontend/web/og-image.png` (e.g. 1200×630) for richer previews when the site is shared; the build will serve it at `/og-image.png`
 
-**If GSC shows "Couldn't fetch" for the sitemap:** Redeploy using the steps above so `sitemap.xml` is copied into `frontend/build/jaspr` before `firebase deploy`. The rewrites in `firebase.json` serve `/sitemap.xml` and `/robots.txt` from static files first.
+**If GSC shows "Couldn't fetch" for the sitemap:** The sitemap is also served by the backend at `https://ai-opportunity-advisor.onrender.com/sitemap.xml`. Submit that URL in the Sitemaps report instead of the Firebase Hosting URL. `robots.txt` already points to this backend URL.
 
 **Browser console "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."** — This comes from a browser extension (e.g. React DevTools, password manager, ad blocker), not from the app. You can ignore it or disable extensions to clear the message.
 
