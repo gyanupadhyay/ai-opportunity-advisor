@@ -200,15 +200,27 @@ The frontend always calls the backend using the `API_BASE_URL` you pass via `--d
 
 ### Frontend — Firebase Hosting
 
+Ensure `sitemap.xml` and `robots.txt` are in the build output so Google can fetch the sitemap:
+
 ```bash
-# Build the Jaspr frontend (point to your production backend URL)
+# 1. Build the Jaspr frontend (point to your production backend URL)
 cd frontend
 jaspr build --dart-define=API_BASE_URL=https://your-backend-url.onrender.com
 cd ..
 
-# Deploy to Firebase Hosting
+# 2. Copy SEO files into build (required for sitemap/robots to be served)
+npm run deploy:hosting
+```
+
+Or run the copy step manually, then deploy:
+
+```bash
+# Copy sitemap and robots into frontend/build/jaspr, then deploy
+node scripts/copy-seo.mjs
 firebase deploy --only hosting
 ```
+
+`firebase.json` rewrites `/sitemap.xml` and `/robots.txt` to these static files before the SPA catch-all so they are always served correctly.
 
 ### Backend — Render
 
@@ -309,6 +321,10 @@ To improve Google visibility:
 
 1. **Google Search Console**: Add property `https://ai-opportunity-advisor.web.app`, verify ownership, then submit the sitemap: `https://ai-opportunity-advisor.web.app/sitemap.xml`
 2. **Social image**: Add `frontend/web/og-image.png` (e.g. 1200×630) for richer previews when the site is shared; the build will serve it at `/og-image.png`
+
+**If GSC shows "Couldn't fetch" for the sitemap:** Redeploy using the steps above so `sitemap.xml` is copied into `frontend/build/jaspr` before `firebase deploy`. The rewrites in `firebase.json` serve `/sitemap.xml` and `/robots.txt` from static files first.
+
+**Browser console "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."** — This comes from a browser extension (e.g. React DevTools, password manager, ad blocker), not from the app. You can ignore it or disable extensions to clear the message.
 
 ---
 

@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "deploy:hosting": "node scripts/copy-seo.mjs && firebase deploy --only hosting"
+  },
   "dependencies": {
     "dotenv": "^17.3.1",
     "firebase-admin": "^13.7.0",
