@@ -5,7 +5,7 @@ import {
   DEFAULT_PROFILE,
 } from "../models/user_model";
 
-const SYSTEM_PROMPT = `You are Pragya AI, an intelligent advisor that helps students discover global opportunities such as scholarships, internships, fellowships, research programs, exchange programs, and international summits.
+const SYSTEM_PROMPT = `You are Vedixa AI, an intelligent advisor that helps students discover global opportunities such as scholarships, internships, fellowships, research programs, exchange programs, and international summits.
 
 Your mission is to help students find opportunities that match their academic background, interests, and goals. You behave like a helpful advisor, not a generic chatbot.
 
@@ -57,9 +57,9 @@ TONE GUIDELINES:
 - Encouraging
 - Professional
 
-START: When the conversation begins (no prior messages), greet the student warmly, introduce yourself as Pragya AI, and ask the first question about their country.`;
+START: When the conversation begins (no prior messages), greet the student warmly, introduce yourself as Vedixa AI, and ask the first question about their country.`;
 
-const EXTRACTION_PROMPT = `Analyze this conversation between a student and the Pragya AI advisor. Extract the student's profile from what they have explicitly stated.
+const EXTRACTION_PROMPT = `Analyze this conversation between a student and the Vedixa AI advisor. Extract the student's profile from what they have explicitly stated.
 
 Return ONLY a valid JSON object with these fields (use null for anything not yet mentioned):
 {
@@ -111,7 +111,7 @@ export async function generateResponse(
 
   return (
     completion.choices[0]?.message?.content ??
-    "Hi! I'm Pragya AI. I help students discover scholarships and global opportunities. Which country are you from?"
+    "Hi! I'm Vedixa AI. I help students discover scholarships and global opportunities. Which country are you from?"
   );
 }
 
@@ -124,7 +124,7 @@ export async function extractProfile(
     const transcript = history
       .map(
         (m) =>
-          `${m.role === "user" ? "Student" : "Pragya AI"}: ${m.content}`
+          `${m.role === "user" ? "Student" : "Vedixa AI"}: ${m.content}`
       )
       .join("\n");
 

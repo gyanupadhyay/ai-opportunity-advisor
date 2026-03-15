@@ -1,4 +1,4 @@
-# AI Opportunity Advisor (Pragya AI)
+# AI Opportunity Advisor (Vedixa AI)
 
 An AI-powered chatbot that helps students discover scholarships, internships, fellowships, exchange programs, and global opportunities through a conversational interface with smart quick-reply suggestions.
 

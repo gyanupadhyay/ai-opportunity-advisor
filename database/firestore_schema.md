@@ -1,12 +1,12 @@
 # Firestore Database Schema
 
-This document describes the Firestore collections used by Pragya AI.
+This document describes the Firestore collections used by Vedixa AI.
 
 ---
 
 ## Collection: `opportunities`
 
-Stores the global opportunities that Pragya AI recommends to students.
+Stores the global opportunities that Vedixa AI recommends to students.
 
 | Field           | Type   | Description                                          |
 |-----------------|--------|------------------------------------------------------|
