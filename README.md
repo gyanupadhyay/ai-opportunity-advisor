@@ -68,8 +68,10 @@ ai-opportunity-advisor/
 │   │   ├── constants.dart              # Frontend-wide constants (routes, roles, types, endpoints)
 │   │   └── main.client.dart
 │   ├── web/
-│   │   ├── index.html
-│   │   └── styles.css                 # All styles (responsive, clamp, dvh)
+│   │   ├── index.html                 # Entry + SEO meta, OG, JSON-LD
+│   │   ├── styles.css                 # All styles (responsive, clamp, dvh)
+│   │   ├── robots.txt                 # Crawler rules + sitemap URL
+│   │   └── sitemap.xml                # URL list for search engines
 │   └── pubspec.yaml
 ├── server/                     # Express.js backend (for Render deployment)
 │   ├── src/
@@ -291,6 +293,22 @@ The chat interface includes a microphone button that uses the **Web Speech API**
 3. Your speech is converted to text and automatically sent
 
 **Browser support:** Chrome, Edge, Safari. The mic button only appears if the browser supports the API.
+
+---
+
+## SEO
+
+The site is set up for search and social sharing:
+
+- **Meta**: Title, description, keywords, canonical URL, `robots: index, follow`
+- **Open Graph** & **Twitter Card**: For link previews on social platforms
+- **JSON-LD**: `WebApplication` schema for search engines
+- **`robots.txt`** and **`sitemap.xml`** in `frontend/web/` (included in build output)
+
+To improve Google visibility:
+
+1. **Google Search Console**: Add property `https://ai-opportunity-advisor.web.app`, verify ownership, then submit the sitemap: `https://ai-opportunity-advisor.web.app/sitemap.xml`
+2. **Social image**: Add `frontend/web/og-image.png` (e.g. 1200×630) for richer previews when the site is shared; the build will serve it at `/og-image.png`
 
 ---
 

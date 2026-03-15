@@ -16,7 +16,7 @@ class App extends StatelessComponent {
       routes: [
         Route(
           path: routeHome,
-          title: 'AI Opportunity Advisor',
+          title: '$appName — Scholarships, Internships & Global Opportunities',
           builder: (context, state) => const HomePage(),
         ),
         Route(
@@ -26,12 +26,12 @@ class App extends StatelessComponent {
         ),
         Route(
           path: routeChat,
-          title: 'Chat - AI Opportunity Advisor',
+          title: 'Chat - $appName',
           builder: (context, state) => const ChatPage(),
         ),
         Route(
           path: routeAdmin,
-          title: 'Admin - AI Opportunity Advisor',
+          title: 'Admin - $appName',
           builder: (context, state) => const AdminPage(),
         ),
       ],
