@@ -20,7 +20,11 @@ const String routeAdmin = '/admin';
 
 // ─── API Endpoints (relative to base URL) ────────────────────────────────────
 const String endpointChat = '/handleChatMessage';
+const String endpointConversation = '/conversations';
 const String endpointAdminOpportunities = '/admin/opportunities';
+
+// Multi-conversation endpoints
+const String endpointMyConversations = '/me/conversations';
 
 // ─── Opportunity Types ───────────────────────────────────────────────────────
 const String typeScholarship = 'scholarship';

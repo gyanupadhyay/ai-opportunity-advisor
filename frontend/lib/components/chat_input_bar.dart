@@ -21,6 +21,7 @@ class ChatInputBar extends StatefulComponent {
 class _ChatInputBarState extends State<ChatInputBar> {
   bool _isRecording = false;
   String _currentInput = '';
+  String? _micError;
 
   final SpeechService _speechService = SpeechService();
   final GlobalNodeKey<web.HTMLInputElement> _inputKey = GlobalNodeKey();
@@ -37,7 +38,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   void _toggleMic() {
-    if (!_speechService.isSupported || component.isLoading) return;
+    if (!_speechService.isSupported || component.isLoading) {
+      setState(() {
+        _micError = 'Voice input is not supported in this browser.';
+      });
+      return;
+    }
 
     if (_isRecording) {
       _speechService.stop();
@@ -58,47 +64,58 @@ class _ChatInputBarState extends State<ChatInputBar> {
         setState(() => _isRecording = false);
       },
       onError: (error) {
-        setState(() => _isRecording = false);
+        setState(() {
+          _isRecording = false;
+          _micError = error.isEmpty
+              ? 'Could not access the microphone. Please check your browser permissions.'
+              : error;
+        });
       },
     );
   }
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'chat-input-area', [
-      input<String>(
-        key: _inputKey,
-        classes: 'chat-input',
-        type: InputType.text,
-        attributes: {
-          'placeholder':
-              _isRecording ? 'Listening...' : 'Type your answer...',
-        },
-        onInput: (value) {
-          _currentInput = value;
-        },
-        events: {
-          'keydown': (event) {
-            final ke = event as web.KeyboardEvent;
-            if (ke.key == 'Enter' && !component.isLoading) {
-              _handleSend();
-            }
+    return div(classes: 'chat-input-wrapper', [
+      div(classes: 'chat-input-area', [
+        input<String>(
+          key: _inputKey,
+          classes: 'chat-input',
+          type: InputType.text,
+          attributes: {
+            'placeholder':
+                _isRecording ? 'Listening...' : 'Type your answer...',
           },
-        },
-      ),
-      if (_speechService.isSupported)
-        button(
-          classes: 'mic-btn${_isRecording ? ' recording' : ''}',
-          disabled: component.isLoading,
-          onClick: _toggleMic,
-          [.text(_isRecording ? '\u{23F9}' : '\u{1F3A4}')],
+          onInput: (value) {
+            _currentInput = value;
+          },
+          events: {
+            'keydown': (event) {
+              final ke = event as web.KeyboardEvent;
+              if (ke.key == 'Enter' && !component.isLoading) {
+                _handleSend();
+              }
+            },
+          },
         ),
-      button(
-        classes: 'send-btn',
-        disabled: component.isLoading,
-        onClick: _handleSend,
-        [.text('Send \u{27A4}')],
-      ),
+        if (_speechService.isSupported)
+          button(
+            classes: 'mic-btn${_isRecording ? ' recording' : ''}',
+            disabled: component.isLoading,
+            onClick: _toggleMic,
+            [.text(_isRecording ? '\u{23F9}' : '\u{1F3A4}')],
+          ),
+        button(
+          classes: 'send-btn',
+          disabled: component.isLoading,
+          onClick: _handleSend,
+          [.text('Send \u{27A4}')],
+        ),
+      ]),
+      if (_micError != null)
+        p(classes: 'mic-error', [
+          .text(_micError!),
+        ]),
     ]);
   }
 }

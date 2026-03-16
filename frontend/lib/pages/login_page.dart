@@ -15,6 +15,7 @@ class LoginPage extends StatefulComponent {
 class _LoginPageState extends State<LoginPage> {
   bool _loading = false;
   String? _error;
+  String? _activeLegal; // 'terms' or 'privacy'
 
   Future<void> _handleGoogleSignIn() async {
     setState(() {
@@ -45,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
         h1(classes: 'login-title', [.text(appName)]),
         p(classes: 'login-subtitle', [
           .text(
-            'Sign in to discover scholarships, internships, '
+            'Log in to discover scholarships, internships, '
             'and global opportunities tailored to your goals.',
           ),
         ]),
@@ -75,10 +76,26 @@ class _LoginPageState extends State<LoginPage> {
           p(classes: 'login-error', [.text(_error!)]),
         div(classes: 'login-footer', [
           p(classes: 'login-terms', [
-            .text('By signing in you agree to our '),
-            span(classes: 'login-link', [.text('Terms')]),
+            .text('By logging in you agree to our '),
+            span(
+              classes: 'login-link',
+              events: {
+                'click': (_) {
+                  setState(() => _activeLegal = 'terms');
+                },
+              },
+              [.text('Terms')],
+            ),
             .text(' and '),
-            span(classes: 'login-link', [.text('Privacy Policy')]),
+            span(
+              classes: 'login-link',
+              events: {
+                'click': (_) {
+                  setState(() => _activeLegal = 'privacy');
+                },
+              },
+              [.text('Privacy Policy')],
+            ),
           ]),
         ]),
         div(classes: 'login-skip', [
@@ -90,6 +107,82 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ]),
       ]),
+      if (_activeLegal != null)
+        div(classes: 'modal-backdrop', [
+          div(classes: 'modal-card', [
+            div(classes: 'modal-header', [
+              h2([
+                .text(
+                  _activeLegal == 'terms' ? 'Terms of Use' : 'Privacy Policy',
+                ),
+              ]),
+              button(
+                classes: 'modal-close-btn',
+                onClick: () => setState(() => _activeLegal = null),
+                [.text('\u00D7')],
+              ),
+            ]),
+            div(classes: 'modal-body', [
+              if (_activeLegal == 'terms') ...[
+                p([
+                  .text(
+                    'Vedixa AI is an informational assistant that helps you discover ',
+                  ),
+                ]),
+                p([
+                  .text(
+                    'scholarships, internships, and global opportunities. Always verify ',
+                  ),
+                ]),
+                p([
+                  .text(
+                    'details on the official opportunity website before applying. Using ',
+                  ),
+                ]),
+                p([
+                  .text(
+                    'this site does not create any legal, financial, or advisory ',
+                  ),
+                ]),
+                p([.text('relationship between you and Vedixa AI.')]),
+              ] else ...[
+                p([
+                  .text(
+                    'We store your conversation data and basic profile information ',
+                  ),
+                ]),
+                p([
+                  .text(
+                    '(such as country, education level, and fields of interest) to ',
+                  ),
+                ]),
+                p([
+                  .text(
+                    'personalise recommendations. We may also log technical data such ',
+                  ),
+                ]),
+                p([
+                  .text(
+                    'as browser type and IP address for security and analytics. ',
+                  ),
+                ]),
+                p([
+                  .text(
+                    'You can stop using the service at any time; your data can be ',
+                  ),
+                ]),
+                p([.text('removed if you contact the project owner.')]),
+              ],
+            ]),
+            div(classes: 'modal-footer', [
+              button(
+                classes: 'modal-primary-btn',
+                onClick: () => setState(() => _activeLegal = null),
+                [.text('Close')],
+              ),
+            ]),
+          ]),
+        ]),
     ]);
   }
 }

@@ -10,7 +10,14 @@ import 'chat_input_bar.dart';
 import 'message_bubble.dart';
 
 class ChatWidget extends StatefulComponent {
-  const ChatWidget({super.key});
+  final String conversationId;
+  final void Function(String conversationId, String newTitle)? onTitleUpdated;
+
+  const ChatWidget({
+    required this.conversationId,
+    this.onTitleUpdated,
+    super.key,
+  });
 
   @override
   State<ChatWidget> createState() => ChatWidgetState();
@@ -19,22 +26,46 @@ class ChatWidget extends StatefulComponent {
 class ChatWidgetState extends State<ChatWidget> {
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
+  bool _isFirstUserMessage = true;
 
   final GlobalNodeKey<web.HTMLDivElement> _messagesKey = GlobalNodeKey();
 
   @override
   void initState() {
     super.initState();
-    _startConversation();
+    _bootstrapConversation();
   }
 
-  /// Sends a hidden "__start__" message so the Vedixa AI advisor generates
-  /// its opening greeting and first onboarding question.
-  Future<void> _startConversation() async {
+  Future<void> _bootstrapConversation() async {
     setState(() => _isLoading = true);
 
+    final history = await ApiService.loadConversationMessages(
+      component.conversationId,
+    );
+
+    if (history.isNotEmpty) {
+      setState(() {
+        _messages.addAll(
+          history.map(
+            (m) => ChatMessage(content: m['content']!, role: m['role']!),
+          ),
+        );
+        _isFirstUserMessage = !history.any((m) => m['role'] == roleUser);
+        _isLoading = false;
+      });
+      _scrollToBottom();
+      return;
+    }
+
+    await _startConversation();
+  }
+
+  Future<void> _startConversation() async {
     try {
-      final response = await ApiService.sendMessage(startMessage);
+      final response = await ApiService.sendConversationMessage(
+        component.conversationId,
+        startMessage,
+      );
       final user = AuthService.currentUser;
       var reply = response.reply;
 
@@ -101,7 +132,10 @@ class ChatWidgetState extends State<ChatWidget> {
 
     _scrollToBottom();
 
-    final response = await ApiService.sendMessage(text);
+    final response = await ApiService.sendConversationMessage(
+      component.conversationId,
+      text,
+    );
 
     setState(() {
       _messages.add(
@@ -114,7 +148,25 @@ class ChatWidgetState extends State<ChatWidget> {
       _isLoading = false;
     });
 
+    // After first user message, the backend generates a title.
+    // Refresh the sidebar title.
+    if (_isFirstUserMessage) {
+      _isFirstUserMessage = false;
+      _refreshTitle();
+    }
+
     _scrollToBottom();
+  }
+
+  Future<void> _refreshTitle() async {
+    final convs = await ApiService.listConversations();
+    final match = convs.where(
+      (c) => c['id'] == component.conversationId,
+    );
+    if (match.isNotEmpty) {
+      final newTitle = (match.first['title'] as String?) ?? 'New chat';
+      component.onTitleUpdated?.call(component.conversationId, newTitle);
+    }
   }
 
   static const _quickReplyMap = <String, List<String>>{

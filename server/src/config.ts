@@ -13,6 +13,13 @@ export const COLLECTION_OPPORTUNITIES = "opportunities";
 export const COLLECTION_CONVERSATIONS = "conversations";
 export const COLLECTION_CHATS = "chats";
 
+// New multi-conversation collections
+export const COLLECTION_USER_CONVERSATIONS = "userConversations";
+export const COLLECTION_CONVERSATION_MESSAGES = "conversationMessages";
+
+// ─── Title Generation ────────────────────────────────────────────────────────
+export const AI_MAX_TOKENS_TITLE = 20;
+
 // ─── Opportunity Query Limits ────────────────────────────────────────────────
 export const QUERY_LIMIT_PRIMARY = 15;
 export const QUERY_LIMIT_FALLBACK = 10;

@@ -40,6 +40,34 @@ app.get("/", (_req, res) => {
   res.json({ status: "ok", service: "AI Opportunity Advisor API" });
 });
 
+// Expose raw conversation history for a given session/user.
+app.get("/conversations/:sessionId", async (req, res) => {
+  try {
+    const { db } = await import("./firebase");
+    const { COLLECTION_CONVERSATIONS } = await import("./config");
+    const doc = await db
+      .collection(COLLECTION_CONVERSATIONS)
+      .doc(req.params.sessionId)
+      .get();
+
+    if (!doc.exists) {
+      res.status(200).json({ messages: [] });
+      return;
+    }
+
+    const data = doc.data() as {
+      messages?: { role: string; content: string }[];
+    } | null;
+
+    res.status(200).json({
+      messages: data?.messages ?? [],
+    });
+  } catch (e: any) {
+    console.error("Error loading conversation history", e);
+    res.status(500).json({ error: "Failed to load conversation history" });
+  }
+});
+
 // Sitemap for search engines (avoids Firebase Hosting fetch issues)
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -105,6 +133,10 @@ app.get("/health", async (_req, res) => {
 
 app.post("/handleChatMessage", handleChatMessage);
 app.use("/admin", adminRoutes);
+
+// New multi-conversation routes (requires auth)
+import conversationRoutes from "./conversation_routes";
+app.use("/me/conversations", conversationRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

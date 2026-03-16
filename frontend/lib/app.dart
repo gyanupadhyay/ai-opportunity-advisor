@@ -21,7 +21,7 @@ class App extends StatelessComponent {
         ),
         Route(
           path: routeLogin,
-          title: 'Sign In - $appName',
+          title: 'Login - $appName',
           builder: (context, state) => const LoginPage(),
         ),
         Route(

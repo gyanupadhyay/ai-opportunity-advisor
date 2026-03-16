@@ -52,6 +52,7 @@
         getAuth,
         onAuthStateChanged,
         signInWithPopup,
+        signInWithRedirect,
         signOut,
         GoogleAuthProvider,
       } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
@@ -97,9 +98,18 @@
         if (user) user.getIdToken(true).then((t) => localStorage.setItem("pathora_id_token", t));
       }, 50 * 60 * 1000);
 
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
       // Expose sign-in / sign-out to Dart via global functions
       window.pathoraSignInWithGoogle = async function () {
         try {
+          if (isIOS) {
+            // Popup-based auth is unreliable on iOS browsers; use redirect.
+            await signInWithRedirect(auth, googleProvider);
+            return true;
+          }
+
           await signInWithPopup(auth, googleProvider);
           return true;
         } catch (e) {
