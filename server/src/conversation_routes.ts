@@ -63,14 +63,23 @@ router.get("/", async (req: AuthedRequest, res: Response) => {
       const snap = await db
         .collection(COLLECTION_USER_CONVERSATIONS)
         .where("ownerUid", "==", uid)
-        .orderBy("updatedAt", "desc")
-        .limit(50)
+        // Avoid Firestore composite index requirements by sorting in memory.
+        .limit(100)
         .get();
 
       const conversations = snap.docs.map((d) => ({
         id: d.id,
-        ...d.data(),
+        ...(d.data() as Record<string, any>),
       }));
+      (conversations as any[]).sort((a, b) => {
+        const au =
+          a.updatedAt?.toDate?.()?.getTime?.() ??
+          (a.updatedAt instanceof Date ? a.updatedAt.getTime() : 0);
+        const bu =
+          b.updatedAt?.toDate?.()?.getTime?.() ??
+          (b.updatedAt instanceof Date ? b.updatedAt.getTime() : 0);
+        return bu - au;
+      });
       res.json({ conversations });
     } else {
       const conversations = memConversations
@@ -187,17 +196,22 @@ router.get("/:id/messages", async (req: AuthedRequest, res: Response) => {
       const snap = await db
         .collection(COLLECTION_CONVERSATION_MESSAGES)
         .where("conversationId", "==", convId)
-        .orderBy("timestamp", "asc")
         .get();
 
-      const messages = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          role: data.role,
-          content: data.content,
-          timestamp: data.timestamp?.toDate?.()?.toISOString?.() ?? "",
-        };
-      });
+      const messages = snap.docs
+        .map((d) => {
+          const data = d.data();
+          return {
+            role: data.role,
+            content: data.content,
+            timestamp: data.timestamp?.toDate?.()?.toISOString?.() ?? "",
+          };
+        })
+        .sort((a, b) => {
+          const at = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const bt = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return at - bt;
+        });
       res.json({ messages });
     } else {
       const messages = memMessages
@@ -253,13 +267,21 @@ router.post("/:id/messages", async (req: AuthedRequest, res: Response) => {
         const msgSnap = await db
           .collection(COLLECTION_CONVERSATION_MESSAGES)
           .where("conversationId", "==", convId)
-          .orderBy("timestamp", "asc")
           .get();
 
-        history = msgSnap.docs.map((d) => ({
-          role: d.data().role as "user" | "assistant",
-          content: d.data().content as string,
-        }));
+        history = msgSnap.docs
+          .map((d) => ({
+            role: d.data().role as "user" | "assistant",
+            content: d.data().content as string,
+            timestamp:
+              d.data().timestamp?.toDate?.()?.toISOString?.() ?? "",
+          }))
+          .sort((a, b) => {
+            const at = a.timestamp ? Date.parse(a.timestamp) : 0;
+            const bt = b.timestamp ? Date.parse(b.timestamp) : 0;
+            return at - bt;
+          })
+          .map((m) => ({ role: m.role, content: m.content }));
       } else {
         const conv = memConversations.find((c) => c.id === convId);
         if (conv) {
