@@ -18,7 +18,8 @@ class ApiResponse {
 class ApiService {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:3000',
+    // In production we want to talk to the Render API, not localhost.
+    defaultValue: 'https://ai-opportunity-advisor.onrender.com',
   );
 
   static String get _sessionId {
