@@ -165,7 +165,8 @@ class ApiService {
 
   static Future<bool> deleteConversation(String conversationId) async {
     if (!_isAuthenticated) {
-      return true;
+      // Don't pretend this succeeded; without auth we can't delete server-side.
+      return false;
     }
 
     try {
@@ -184,7 +185,8 @@ class ApiService {
     String title,
   ) async {
     if (!_isAuthenticated) {
-      return true;
+      // Don't pretend this succeeded; without auth we can't persist the rename.
+      return false;
     }
 
     try {
