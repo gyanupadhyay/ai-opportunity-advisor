@@ -28,6 +28,10 @@ class _ChatPageState extends State<ChatPage> {
   // Which conversation's 3-dot menu is open (if any).
   String? _openMenuConversationId;
 
+  // Inline edit state for conversation titles.
+  String? _editingConversationId;
+  String _editingTitle = '';
+
   // Incremented to force ChatWidget rebuild when switching conversations
   int _chatKey = 0;
 
@@ -335,16 +339,68 @@ class _ChatPageState extends State<ChatPage> {
     final id = conv['id'] as String;
     final title = (conv['title'] as String?) ?? 'New chat';
     final isActive = id == _activeConversationId;
+    final isEditing = _editingConversationId == id;
 
     return div(
       classes: 'conv-item${isActive ? ' active' : ''}',
       [
         button(
           classes: 'conv-item-btn',
-          onClick: () => _selectConversation(id),
+          onClick: () => !isEditing ? _selectConversation(id) : null,
           [
             span(classes: 'conv-item-icon', [.text('\u{1F4AC}')]),
-            span(classes: 'conv-item-title', [.text(title)]),
+            if (isEditing)
+              input(
+                classes: 'conv-item-title-input',
+                attributes: {
+                  'type': 'text',
+                  'value': _editingTitle,
+                  'autofocus': 'autofocus',
+                },
+                events: {
+                  'input': (event) {
+                    final target = event.target as web.HTMLInputElement;
+                    setState(() {
+                      _editingTitle = target.value;
+                    });
+                  },
+                  'keydown': (event) async {
+                    final key = (event as web.KeyboardEvent).key;
+                    if (key == 'Enter') {
+                      final newName = _editingTitle.trim();
+                      if (newName.isEmpty) return;
+                      final ok = await ApiService.renameConversation(
+                        id,
+                        newName,
+                      );
+                      if (!ok) return;
+                      setState(() {
+                        final idx =
+                            _conversations.indexWhere((c) => c['id'] == id);
+                        if (idx != -1) {
+                          _conversations[idx] = {
+                            ..._conversations[idx],
+                            'title': newName,
+                          };
+                        }
+                        _editingConversationId = null;
+                      });
+                    } else if (key == 'Escape') {
+                      setState(() {
+                        _editingConversationId = null;
+                      });
+                    }
+                  },
+                  'blur': (_) {
+                    // On blur, just exit edit mode without saving.
+                    setState(() {
+                      _editingConversationId = null;
+                    });
+                  },
+                },
+              )
+            else
+              span(classes: 'conv-item-title', [.text(title)]),
           ],
         ),
         div(classes: 'conv-item-menu-wrapper', [
@@ -360,26 +416,10 @@ class _ChatPageState extends State<ChatPage> {
             div(classes: 'conv-item-menu-popover', [
               button(
                 classes: 'conv-item-menu-item',
-                onClick: () async {
-                  final current = title;
-                  final newName = web.window
-                      .prompt('Edit chat name', current)
-                      ?.trim();
-                  if (newName == null || newName.isEmpty) return;
-
-                  final ok =
-                      await ApiService.renameConversation(id, newName);
-                  if (!ok) return;
-
+                onClick: () {
                   setState(() {
-                    final idx =
-                        _conversations.indexWhere((c) => c['id'] == id);
-                    if (idx != -1) {
-                      _conversations[idx] = {
-                        ..._conversations[idx],
-                        'title': newName,
-                      };
-                    }
+                    _editingConversationId = id;
+                    _editingTitle = title;
                     _openMenuConversationId = null;
                   });
                 },
@@ -388,14 +428,12 @@ class _ChatPageState extends State<ChatPage> {
               button(
                 classes: 'conv-item-menu-item conv-item-menu-item--danger',
                 onClick: () async {
+                  _openMenuConversationId = null;
                   final confirm = web.window.confirm(
                     'Delete this chat and all its messages?',
                   );
                   if (!confirm) return;
                   await _deleteConversation(id);
-                  setState(() {
-                    _openMenuConversationId = null;
-                  });
                 },
                 [.text('Delete')],
               ),

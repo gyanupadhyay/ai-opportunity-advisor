@@ -672,6 +672,16 @@ body {
   text-overflow: ellipsis;
 }
 
+.conv-item-title-input {
+  flex: 1;
+  max-width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+}
+
 .conv-item-menu-wrapper {
   position: relative;
 }
