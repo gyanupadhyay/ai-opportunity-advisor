@@ -24,6 +24,7 @@ class _ChatPageState extends State<ChatPage> {
   String? _activeConversationId;
   bool _shareModalOpen = false;
   String? _shareLink;
+  bool _shareCopied = false;
 
   // Which conversation's 3-dot menu is open (if any).
   String? _openMenuConversationId;
@@ -120,7 +121,33 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       _shareLink = url;
       _shareModalOpen = true;
+      _shareCopied = false;
     });
+  }
+
+  Future<void> _copyShareLink() async {
+    final link = _shareLink;
+    if (link == null || link.isEmpty) return;
+
+    try {
+      // Some browsers / web bindings expose clipboard as a non-Future type.
+      // Use it without awaiting; if it throws, we fall back below.
+      web.window.navigator.clipboard.writeText(link);
+      setState(() => _shareCopied = true);
+      return;
+    } catch (_) {
+      // Fallback below
+    }
+
+    // Fallback: try old execCommand copy by selecting a hidden input.
+    try {
+      final el = web.document.getElementById('share-link-input');
+      if (el is web.HTMLInputElement) {
+        el.select();
+        web.document.execCommand('copy');
+        setState(() => _shareCopied = true);
+      }
+    } catch (_) {}
   }
 
   void _onTitleUpdated(String conversationId, String newTitle) {
@@ -316,13 +343,27 @@ class _ChatPageState extends State<ChatPage> {
                       'Anyone with this link can view a read-only copy of this conversation:',
                     ),
                   ]),
-                  input(
-                    attributes: {
-                      'type': 'text',
-                      'readonly': 'readonly',
-                      'value': _shareLink!,
-                    },
-                    classes: 'share-link-input',
+                  div(classes: 'share-link-row', [
+                    input(
+                      id: 'share-link-input',
+                      attributes: {
+                        'type': 'text',
+                        'readonly': 'readonly',
+                        'value': _shareLink!,
+                      },
+                      classes: 'share-link-input',
+                    ),
+                    button(
+                      classes: 'modal-secondary-btn share-copy-btn',
+                      onClick: _copyShareLink,
+                      [.text(_shareCopied ? 'Copied' : 'Copy')],
+                    ),
+                  ]),
+                  a(
+                    href: _shareLink!,
+                    classes: 'share-open-link',
+                    attributes: {'target': '_blank', 'rel': 'noopener noreferrer'},
+                    [.text('Open shared chat \u2192')],
                   ),
                 ]),
             ]),

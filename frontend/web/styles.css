@@ -790,6 +790,31 @@ body {
   gap: 0.5rem;
 }
 
+.share-link-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.share-copy-btn {
+  flex-shrink: 0;
+}
+
+.share-open-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+}
+
+.share-open-link:hover {
+  text-decoration: underline;
+  color: var(--text-primary);
+}
+
 .share-link-input {
   width: 100%;
   padding: 0.5rem 0.75rem;
