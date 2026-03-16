@@ -165,8 +165,12 @@ class ApiService {
 
   static Future<bool> deleteConversation(String conversationId) async {
     if (!_isAuthenticated) {
-      // Don't pretend this succeeded; without auth we can't delete server-side.
-      return false;
+      // In unauthenticated mode we have only one "current chat" tied to the
+      // fallback session id. Deleting it should reset the local session so the
+      // old messages won't load again after refresh.
+      const fallbackKey = 'pathora_fallback_session';
+      web.window.localStorage.removeItem(fallbackKey);
+      return true;
     }
 
     try {
