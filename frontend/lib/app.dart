@@ -6,6 +6,7 @@ import 'pages/admin_page.dart';
 import 'pages/chat_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
+import 'pages/shared_chat_page.dart';
 
 class App extends StatelessComponent {
   const App({super.key});
@@ -28,6 +29,14 @@ class App extends StatelessComponent {
           path: routeChat,
           title: 'Chat - $appName',
           builder: (context, state) => const ChatPage(),
+        ),
+        Route(
+          path: '$routeShareChat/:id',
+          title: 'Shared Chat - $appName',
+          builder: (context, state) {
+            final id = state.params['id'] ?? '';
+            return SharedChatPage(id);
+          },
         ),
         Route(
           path: routeAdmin,

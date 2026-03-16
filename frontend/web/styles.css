@@ -700,6 +700,23 @@ html, body {
   display: none;
 }
 
+.share-link-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.share-link-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(10, 10, 25, 0.9);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+}
+
 /* ── Main content area ── */
 
 .chat-main {

@@ -23,6 +23,8 @@ class _ChatPageState extends State<ChatPage> {
   String? _activeConversationId;
   bool _deleteConfirmId = false;
   String? _pendingDeleteId;
+  bool _shareModalOpen = false;
+  String? _shareLink;
 
   // Incremented to force ChatWidget rebuild when switching conversations
   int _chatKey = 0;
@@ -89,6 +91,26 @@ class _ChatPageState extends State<ChatPage> {
             _conversations.isNotEmpty ? _conversations.first['id'] as String? : null;
         _chatKey++;
       }
+    });
+  }
+
+  Future<void> _shareActiveConversation() async {
+    final id = _activeConversationId;
+    if (id == null) return;
+
+    final url = await ApiService.createShareLink(id);
+    if (url == null) {
+      // Simple fallback: show a minimal error in the modal.
+      setState(() {
+        _shareLink = null;
+        _shareModalOpen = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _shareLink = url;
+      _shareModalOpen = true;
     });
   }
 
@@ -181,6 +203,12 @@ class _ChatPageState extends State<ChatPage> {
             ]),
           ]),
           div(classes: 'chat-header-actions', [
+              if (_activeConversationId != null)
+                button(
+                  classes: 'secondary-btn',
+                  onClick: _shareActiveConversation,
+                  [.text('Share chat')],
+                ),
             if (user != null)
               button(
                 classes: 'user-avatar-btn',
@@ -252,6 +280,52 @@ class _ChatPageState extends State<ChatPage> {
                   _confirmAndSignOut();
                 },
                 [.text('Logout')],
+              ),
+            ]),
+          ]),
+        ]),
+
+      // ── Share link modal ──
+      if (_shareModalOpen)
+        div(classes: 'modal-backdrop', [
+          div(classes: 'modal-card', [
+            div(classes: 'modal-header', [
+              h2([.text('Share this chat')]),
+              button(
+                classes: 'modal-close-btn',
+                onClick: () => setState(() => _shareModalOpen = false),
+                [.text('\u00D7')],
+              ),
+            ]),
+            div(classes: 'modal-body', [
+              if (_shareLink == null)
+                p([
+                  .text(
+                    'We could not generate a shareable link right now. Please try again in a moment.',
+                  ),
+                ])
+              else
+                div(classes: 'share-link-block', [
+                  p([
+                    .text(
+                      'Anyone with this link can view a read-only copy of this conversation:',
+                    ),
+                  ]),
+                  input(
+                    attributes: {
+                      'type': 'text',
+                      'readonly': 'readonly',
+                      'value': _shareLink!,
+                    },
+                    classes: 'share-link-input',
+                  ),
+                ]),
+            ]),
+            div(classes: 'modal-footer modal-footer-row', [
+              button(
+                classes: 'modal-secondary-btn',
+                onClick: () => setState(() => _shareModalOpen = false),
+                [.text('Close')],
               ),
             ]),
           ]),

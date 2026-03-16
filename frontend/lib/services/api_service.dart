@@ -18,7 +18,6 @@ class ApiResponse {
 class ApiService {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    // In production we want to talk to the Render API, not localhost.
     defaultValue: 'https://ai-opportunity-advisor.onrender.com',
   );
 
@@ -44,6 +43,8 @@ class ApiService {
   static bool get _isAuthenticated =>
       web.window.localStorage.getItem('pathora_id_token') != null &&
       web.window.localStorage.getItem('pathora_id_token')!.isNotEmpty;
+
+  // ─── Core chat API (single-session) ───
 
   static Future<ApiResponse> sendMessage(String message) async {
     try {
@@ -87,8 +88,6 @@ class ApiService {
   }
 
   /// Load existing conversation history for the current session/user.
-  ///
-  /// Returns a list of `{role, content}` maps suitable for `ChatMessage`.
   static Future<List<Map<String, String>>> loadConversation() async {
     try {
       final response = await http.get(
@@ -116,9 +115,7 @@ class ApiService {
 
   // ─── Multi-conversation API ───
 
-  /// A lightweight conversation summary (for the sidebar list).
   static Future<List<Map<String, dynamic>>> listConversations() async {
-    // Fallback: if not authenticated, behave like a single-session chat.
     if (!_isAuthenticated) {
       return [
         {
@@ -143,11 +140,9 @@ class ApiService {
     }
   }
 
-  /// Create a new conversation. Returns `{ id, title }`.
   static Future<Map<String, dynamic>?> createConversation({
     String title = 'New chat',
   }) async {
-    // Fallback: unauthenticated users just use the single session id.
     if (!_isAuthenticated) {
       return {
         'id': _sessionId,
@@ -168,9 +163,7 @@ class ApiService {
     return null;
   }
 
-  /// Delete a conversation.
   static Future<bool> deleteConversation(String conversationId) async {
-    // Fallback: nothing to delete for unauthenticated single-session chats.
     if (!_isAuthenticated) {
       return true;
     }
@@ -186,11 +179,9 @@ class ApiService {
     }
   }
 
-  /// Load all messages for a specific conversation.
   static Future<List<Map<String, String>>> loadConversationMessages(
     String conversationId,
   ) async {
-    // Fallback: use legacy single-session endpoint when not authenticated.
     if (!_isAuthenticated) {
       return loadConversation();
     }
@@ -218,12 +209,10 @@ class ApiService {
     }
   }
 
-  /// Send a message in a specific conversation.
   static Future<ApiResponse> sendConversationMessage(
     String conversationId,
     String message,
   ) async {
-    // Fallback: use legacy single-session chat when not authenticated.
     if (!_isAuthenticated) {
       return sendMessage(message);
     }
@@ -324,6 +313,50 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to delete: ${response.body}');
+    }
+  }
+
+  // ─── Sharing API ───
+
+  static Future<String?> createShareLink(String conversationId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl$endpointMyConversations/$conversationId/share'),
+        headers: _authHeaders,
+      );
+      if (response.statusCode != 201) return null;
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final shareId = data['shareId'] as String?;
+      if (shareId == null || shareId.isEmpty) return null;
+
+      final origin = web.window.location.origin;
+      return '$origin$routeShareChat/$shareId';
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<List<Map<String, String>>> loadSharedConversation(
+    String shareId,
+  ) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl$endpointSharePublic/$shareId'),
+      );
+      if (response.statusCode != 200) return const [];
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final raw = data['messages'] as List<dynamic>? ?? const [];
+
+      return raw.whereType<Map<String, dynamic>>().map((m) {
+        return <String, String>{
+          'role': (m['role'] as String?) ?? roleAssistant,
+          'content': (m['content'] as String?) ?? '',
+        };
+      }).where((m) => m['content']!.isNotEmpty).toList();
+    } catch (_) {
+      return const [];
     }
   }
 }

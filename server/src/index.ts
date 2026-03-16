@@ -136,7 +136,9 @@ app.use("/admin", adminRoutes);
 
 // New multi-conversation routes (requires auth)
 import conversationRoutes from "./conversation_routes";
+import shareRoutes from "./share_routes";
 app.use("/me/conversations", conversationRoutes);
+app.use(shareRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -17,6 +17,7 @@ const String routeHome = '/';
 const String routeLogin = '/login';
 const String routeChat = '/chat';
 const String routeAdmin = '/admin';
+const String routeShareChat = '/share';
 
 // ─── API Endpoints (relative to base URL) ────────────────────────────────────
 const String endpointChat = '/handleChatMessage';
@@ -25,6 +26,7 @@ const String endpointAdminOpportunities = '/admin/opportunities';
 
 // Multi-conversation endpoints
 const String endpointMyConversations = '/me/conversations';
+const String endpointSharePublic = '/share';
 
 // ─── Opportunity Types ───────────────────────────────────────────────────────
 const String typeScholarship = 'scholarship';

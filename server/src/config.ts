@@ -17,6 +17,9 @@ export const COLLECTION_CHATS = "chats";
 export const COLLECTION_USER_CONVERSATIONS = "userConversations";
 export const COLLECTION_CONVERSATION_MESSAGES = "conversationMessages";
 
+// Public shared conversation snapshots
+export const COLLECTION_SHARED_CONVERSATIONS = "sharedConversations";
+
 // ─── Title Generation ────────────────────────────────────────────────────────
 export const AI_MAX_TOKENS_TITLE = 20;
 
