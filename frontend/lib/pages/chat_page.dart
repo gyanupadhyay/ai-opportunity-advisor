@@ -38,18 +38,13 @@ class _ChatPageState extends State<ChatPage> {
 
     final convs = await ApiService.listConversations();
 
-    if (convs.isNotEmpty) {
-      setState(() {
-        _conversations = convs;
-        _activeConversationId ??= convs.first['id'] as String?;
-        _loadingConversations = false;
-        _chatKey++;
-      });
-    } else {
-      // No conversations yet — create one automatically
-      await _createNewChat();
-      setState(() => _loadingConversations = false);
-    }
+    setState(() {
+      _conversations = convs;
+      _activeConversationId =
+          convs.isNotEmpty ? convs.first['id'] as String? : null;
+      _loadingConversations = false;
+      _chatKey++;
+    });
   }
 
   Future<void> _createNewChat() async {
@@ -90,18 +85,11 @@ class _ChatPageState extends State<ChatPage> {
       _pendingDeleteId = null;
 
       if (_activeConversationId == id) {
-        if (_conversations.isNotEmpty) {
-          _activeConversationId = _conversations.first['id'] as String?;
-          _chatKey++;
-        } else {
-          _activeConversationId = null;
-        }
+        _activeConversationId =
+            _conversations.isNotEmpty ? _conversations.first['id'] as String? : null;
+        _chatKey++;
       }
     });
-
-    if (_conversations.isEmpty) {
-      await _createNewChat();
-    }
   }
 
   void _onTitleUpdated(String conversationId, String newTitle) {
