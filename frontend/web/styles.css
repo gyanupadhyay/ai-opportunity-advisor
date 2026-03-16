@@ -672,6 +672,10 @@ body {
   text-overflow: ellipsis;
 }
 
+.conv-item-menu-wrapper {
+  position: relative;
+}
+
 .conv-item-menu {
   flex-shrink: 0;
   background: none;
@@ -692,6 +696,41 @@ body {
 .conv-item-menu:hover {
   opacity: 1 !important;
   background: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+}
+
+.conv-item-menu-popover {
+  position: absolute;
+  right: 0.25rem;
+  top: 1.8rem;
+  min-width: 120px;
+  padding: 0.25rem 0.35rem;
+  border-radius: 8px;
+  background: rgba(18, 18, 35, 0.98);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  z-index: 30;
+}
+
+.conv-item-menu-item {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.conv-item-menu-item:hover {
+  background: rgba(108, 99, 255, 0.15);
+  color: var(--text-primary);
+}
+
+.conv-item-menu-item--danger:hover {
+  background: rgba(255, 59, 48, 0.2);
   color: #ff3b30;
 }
 

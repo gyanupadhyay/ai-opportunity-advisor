@@ -25,9 +25,8 @@ class _ChatPageState extends State<ChatPage> {
   bool _shareModalOpen = false;
   String? _shareLink;
 
-  bool _showConversationOptions = false;
-  String? _optionsConversationId;
-  String _optionsTitle = '';
+  // Which conversation's 3-dot menu is open (if any).
+  String? _openMenuConversationId;
 
   // Incremented to force ChatWidget rebuild when switching conversations
   int _chatKey = 0;
@@ -85,8 +84,9 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       _conversations.removeWhere((c) => c['id'] == id);
-      _showConversationOptions = false;
-      _optionsConversationId = null;
+      if (_openMenuConversationId == id) {
+        _openMenuConversationId = null;
+      }
 
       if (_activeConversationId == id) {
         _activeConversationId = _conversations.isNotEmpty ? _conversations.first['id'] as String? : null;
@@ -328,87 +328,6 @@ class _ChatPageState extends State<ChatPage> {
           ]),
         ]),
 
-      // ── Conversation options modal (rename + delete) ──
-      if (_showConversationOptions && _optionsConversationId != null)
-        div(classes: 'modal-backdrop', [
-          div(classes: 'modal-card', [
-            div(classes: 'modal-header', [
-              h2([.text('Chat options')]),
-              button(
-                classes: 'modal-close-btn',
-                onClick: () => setState(() {
-                  _showConversationOptions = false;
-                  _optionsConversationId = null;
-                }),
-                [.text('\u00D7')],
-              ),
-            ]),
-            div(classes: 'modal-body', [
-              p([.text('Rename this chat:')]),
-              input(
-                classes: 'share-link-input',
-                attributes: {
-                  'type': 'text',
-                  'value': _optionsTitle,
-                },
-                events: {
-                  'input': (event) {
-                    final target = event.target as web.HTMLInputElement;
-                    setState(() {
-                      _optionsTitle = target.value;
-                    });
-                  },
-                },
-              ),
-            ]),
-            div(classes: 'modal-footer modal-footer-row', [
-              button(
-                classes: 'modal-secondary-btn',
-                onClick: () => setState(() {
-                  _showConversationOptions = false;
-                  _optionsConversationId = null;
-                }),
-                [.text('Close')],
-              ),
-              button(
-                classes: 'modal-primary-btn',
-                onClick: () async {
-                  final id = _optionsConversationId;
-                  if (id == null) return;
-
-                  final ok = await ApiService.renameConversation(
-                    id,
-                    _optionsTitle,
-                  );
-                  if (!ok) return;
-
-                  setState(() {
-                    final idx = _conversations.indexWhere((c) => c['id'] == id);
-                    if (idx != -1) {
-                      _conversations[idx] = {
-                        ..._conversations[idx],
-                        'title': _optionsTitle,
-                      };
-                    }
-                    _showConversationOptions = false;
-                    _optionsConversationId = null;
-                  });
-                },
-                [.text('Save name')],
-              ),
-              button(
-                classes: 'modal-primary-btn modal-primary-btn--danger',
-                onClick: () {
-                  final id = _optionsConversationId;
-                  if (id != null) {
-                    _deleteConversation(id);
-                  }
-                },
-                [.text('Delete chat')],
-              ),
-            ]),
-          ]),
-        ]),
     ]);
   }
 
@@ -428,15 +347,60 @@ class _ChatPageState extends State<ChatPage> {
             span(classes: 'conv-item-title', [.text(title)]),
           ],
         ),
-        button(
-          classes: 'conv-item-menu',
-          onClick: () => setState(() {
-            _optionsConversationId = id;
-            _optionsTitle = title;
-            _showConversationOptions = true;
-          }),
-          [.text('\u22EE')],
-        ),
+        div(classes: 'conv-item-menu-wrapper', [
+          button(
+            classes: 'conv-item-menu',
+            onClick: () => setState(() {
+              _openMenuConversationId =
+                  _openMenuConversationId == id ? null : id;
+            }),
+            [.text('\u22EE')],
+          ),
+          if (_openMenuConversationId == id)
+            div(classes: 'conv-item-menu-popover', [
+              button(
+                classes: 'conv-item-menu-item',
+                onClick: () async {
+                  final current = title;
+                  final newName = web.window
+                      .prompt('Edit chat name', current)
+                      ?.trim();
+                  if (newName == null || newName.isEmpty) return;
+
+                  final ok =
+                      await ApiService.renameConversation(id, newName);
+                  if (!ok) return;
+
+                  setState(() {
+                    final idx =
+                        _conversations.indexWhere((c) => c['id'] == id);
+                    if (idx != -1) {
+                      _conversations[idx] = {
+                        ..._conversations[idx],
+                        'title': newName,
+                      };
+                    }
+                    _openMenuConversationId = null;
+                  });
+                },
+                [.text('Edit name')],
+              ),
+              button(
+                classes: 'conv-item-menu-item conv-item-menu-item--danger',
+                onClick: () async {
+                  final confirm = web.window.confirm(
+                    'Delete this chat and all its messages?',
+                  );
+                  if (!confirm) return;
+                  await _deleteConversation(id);
+                  setState(() {
+                    _openMenuConversationId = null;
+                  });
+                },
+                [.text('Delete')],
+              ),
+            ]),
+        ]),
       ],
     );
   }
