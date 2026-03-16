@@ -32,6 +32,10 @@ class _ChatPageState extends State<ChatPage> {
   String? _editingConversationId;
   String _editingTitle = '';
 
+  // Delete confirmation state
+  bool _showDeleteConfirm = false;
+  String? _pendingDeleteId;
+
   // Incremented to force ChatWidget rebuild when switching conversations
   int _chatKey = 0;
 
@@ -332,6 +336,55 @@ class _ChatPageState extends State<ChatPage> {
           ]),
         ]),
 
+      // ── Delete confirmation modal ──
+      if (_showDeleteConfirm && _pendingDeleteId != null)
+        div(classes: 'modal-backdrop', [
+          div(classes: 'modal-card', [
+            div(classes: 'modal-header', [
+              h2([.text('Delete chat?')]),
+              button(
+                classes: 'modal-close-btn',
+                onClick: () => setState(() {
+                  _showDeleteConfirm = false;
+                  _pendingDeleteId = null;
+                }),
+                [.text('\u00D7')],
+              ),
+            ]),
+            div(classes: 'modal-body', [
+              p([
+                .text(
+                  'This will permanently delete this conversation and all its messages.',
+                ),
+              ]),
+            ]),
+            div(classes: 'modal-footer modal-footer-row', [
+              button(
+                classes: 'modal-secondary-btn',
+                onClick: () => setState(() {
+                  _showDeleteConfirm = false;
+                  _pendingDeleteId = null;
+                }),
+                [.text('Cancel')],
+              ),
+              button(
+                classes: 'modal-primary-btn modal-primary-btn--danger',
+                onClick: () async {
+                  final id = _pendingDeleteId;
+                  if (id != null) {
+                    await _deleteConversation(id);
+                  }
+                  setState(() {
+                    _showDeleteConfirm = false;
+                    _pendingDeleteId = null;
+                  });
+                },
+                [.text('Delete chat')],
+              ),
+            ]),
+          ]),
+        ]),
+
     ]);
   }
 
@@ -427,13 +480,12 @@ class _ChatPageState extends State<ChatPage> {
               ),
               button(
                 classes: 'conv-item-menu-item conv-item-menu-item--danger',
-                onClick: () async {
-                  _openMenuConversationId = null;
-                  final confirm = web.window.confirm(
-                    'Delete this chat and all its messages?',
-                  );
-                  if (!confirm) return;
-                  await _deleteConversation(id);
+                onClick: () {
+                  setState(() {
+                    _pendingDeleteId = id;
+                    _showDeleteConfirm = true;
+                    _openMenuConversationId = null;
+                  });
                 },
                 [.text('Delete')],
               ),
