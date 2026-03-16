@@ -519,6 +519,23 @@ html, body {
   animation: pageFadeIn 0.4s ease;
 }
 
+/* Shared chat variant (no sidebar, centered content) */
+.shared-chat-page {
+  justify-content: center;
+}
+
+.shared-chat-main {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  background:
+    radial-gradient(circle at top left, rgba(108, 99, 255, 0.12), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(0, 210, 255, 0.12), transparent 55%),
+    rgba(10, 10, 25, 0.98);
+}
+
 /* ── Sidebar ── */
 
 .chat-sidebar {
@@ -839,6 +856,26 @@ html, body {
 .back-btn:hover {
   background: rgba(108, 99, 255, 0.2);
   color: var(--text-primary);
+}
+
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(108, 99, 255, 0.5);
+  background: rgba(108, 99, 255, 0.12);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background: rgba(108, 99, 255, 0.24);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
 }
 
 /* ==================== Chat Messages ==================== */

@@ -41,8 +41,8 @@ class _SharedChatPageState extends State<SharedChatPage> {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'chat-page', [
-      div(classes: 'chat-main', [
+    return div(classes: 'chat-page shared-chat-page', [
+      div(classes: 'chat-main shared-chat-main', [
         div(classes: 'chat-header', [
           div(classes: 'chat-header-left', [
             div(classes: 'chat-header-title', [
