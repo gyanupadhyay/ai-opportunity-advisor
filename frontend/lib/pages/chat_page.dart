@@ -45,8 +45,7 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       _conversations = convs;
-      _activeConversationId =
-          convs.isNotEmpty ? convs.first['id'] as String? : null;
+      _activeConversationId = convs.isNotEmpty ? convs.first['id'] as String? : null;
       _loadingConversations = false;
       _chatKey++;
     });
@@ -90,8 +89,7 @@ class _ChatPageState extends State<ChatPage> {
       _optionsConversationId = null;
 
       if (_activeConversationId == id) {
-        _activeConversationId =
-            _conversations.isNotEmpty ? _conversations.first['id'] as String? : null;
+        _activeConversationId = _conversations.isNotEmpty ? _conversations.first['id'] as String? : null;
         _chatKey++;
       }
     });
@@ -158,8 +156,7 @@ class _ChatPageState extends State<ChatPage> {
             if (_loadingConversations)
               div(classes: 'conv-loading', [.text('Loading...')])
             else
-              for (final conv in _conversations)
-                _buildConversationItem(conv),
+              for (final conv in _conversations) _buildConversationItem(conv),
           ]),
           if (user != null)
             div(classes: 'sidebar-footer', [
@@ -206,17 +203,16 @@ class _ChatPageState extends State<ChatPage> {
             ]),
           ]),
           div(classes: 'chat-header-actions', [
-              if (_activeConversationId != null)
-                button(
-                  classes: 'secondary-btn',
-                  onClick: _shareActiveConversation,
-                  [.text('Share chat')],
-                ),
+            if (_activeConversationId != null)
+              button(
+                classes: 'secondary-btn',
+                onClick: _shareActiveConversation,
+                [.text('Share chat')],
+              ),
             if (user != null)
               button(
                 classes: 'user-avatar-btn',
-                onClick: () =>
-                    setState(() => _showLogoutConfirm = true),
+                onClick: () => setState(() => _showLogoutConfirm = true),
                 [
                   if (user.photoUrl.isNotEmpty)
                     img(
@@ -257,8 +253,7 @@ class _ChatPageState extends State<ChatPage> {
               h2([.text('Logout?')]),
               button(
                 classes: 'modal-close-btn',
-                onClick: () =>
-                    setState(() => _showLogoutConfirm = false),
+                onClick: () => setState(() => _showLogoutConfirm = false),
                 [.text('\u00D7')],
               ),
             ]),
@@ -272,8 +267,7 @@ class _ChatPageState extends State<ChatPage> {
             div(classes: 'modal-footer modal-footer-row', [
               button(
                 classes: 'modal-secondary-btn',
-                onClick: () =>
-                    setState(() => _showLogoutConfirm = false),
+                onClick: () => setState(() => _showLogoutConfirm = false),
                 [.text('Cancel')],
               ),
               button(
@@ -381,8 +375,7 @@ class _ChatPageState extends State<ChatPage> {
                 onClick: () => setState(() {
                   final id = _optionsConversationId;
                   if (id != null) {
-                    final idx =
-                        _conversations.indexWhere((c) => c['id'] == id);
+                    final idx = _conversations.indexWhere((c) => c['id'] == id);
                     if (idx != -1) {
                       _conversations[idx] = {
                         ..._conversations[idx],
