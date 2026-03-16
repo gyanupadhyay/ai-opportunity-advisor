@@ -179,6 +179,26 @@ class ApiService {
     }
   }
 
+  static Future<bool> renameConversation(
+    String conversationId,
+    String title,
+  ) async {
+    if (!_isAuthenticated) {
+      return true;
+    }
+
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl$endpointMyConversations/$conversationId'),
+        headers: {'Content-Type': 'application/json', ..._authHeaders},
+        body: jsonEncode({'title': title}),
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<List<Map<String, String>>> loadConversationMessages(
     String conversationId,
   ) async {

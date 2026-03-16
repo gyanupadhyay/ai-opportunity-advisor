@@ -184,6 +184,54 @@ router.delete("/:id", async (req: AuthedRequest, res: Response) => {
   }
 });
 
+// ─── Rename conversation ──────────────────────────────────────────────────────
+router.patch("/:id", async (req: AuthedRequest, res: Response) => {
+  const uid = requireAuth(req, res);
+  if (!uid) return;
+
+  const convId = req.params.id as string;
+  const { title } = req.body as { title?: string };
+
+  if (!title || !title.trim()) {
+    res.status(400).json({ error: "title is required" });
+    return;
+  }
+
+  try {
+    if (await checkFirestore()) {
+      const docRef = db
+        .collection(COLLECTION_USER_CONVERSATIONS)
+        .doc(convId);
+      const doc = await docRef.get();
+      if (!doc.exists || doc.data()?.ownerUid !== uid) {
+        res.status(404).json({ error: "Conversation not found" });
+        return;
+      }
+
+      await docRef.update({
+        title: title.trim(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.json({ success: true, title: title.trim() });
+    } else {
+      const conv = memConversations.find(
+        (c) => c.id === convId && c.ownerUid === uid
+      );
+      if (!conv) {
+        res.status(404).json({ error: "Conversation not found" });
+        return;
+      }
+      conv.title = title.trim();
+      conv.updatedAt = new Date().toISOString();
+      res.json({ success: true, title: conv.title });
+    }
+  } catch (e) {
+    console.error("Error renaming conversation", e);
+    res.status(500).json({ error: "Failed to rename conversation" });
+  }
+});
+
 // ─── Get messages for a conversation ──────────────────────────────────────────
 router.get("/:id/messages", async (req: AuthedRequest, res: Response) => {
   const uid = requireAuth(req, res);

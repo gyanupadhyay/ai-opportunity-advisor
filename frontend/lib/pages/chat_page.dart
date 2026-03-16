@@ -372,9 +372,17 @@ class _ChatPageState extends State<ChatPage> {
               ),
               button(
                 classes: 'modal-primary-btn',
-                onClick: () => setState(() {
+                onClick: () async {
                   final id = _optionsConversationId;
-                  if (id != null) {
+                  if (id == null) return;
+
+                  final ok = await ApiService.renameConversation(
+                    id,
+                    _optionsTitle,
+                  );
+                  if (!ok) return;
+
+                  setState(() {
                     final idx = _conversations.indexWhere((c) => c['id'] == id);
                     if (idx != -1) {
                       _conversations[idx] = {
@@ -382,10 +390,10 @@ class _ChatPageState extends State<ChatPage> {
                         'title': _optionsTitle,
                       };
                     }
-                  }
-                  _showConversationOptions = false;
-                  _optionsConversationId = null;
-                }),
+                    _showConversationOptions = false;
+                    _optionsConversationId = null;
+                  });
+                },
                 [.text('Save name')],
               ),
               button(
