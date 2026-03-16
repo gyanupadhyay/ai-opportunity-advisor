@@ -1,6 +1,7 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
+import 'package:web/web.dart' as web;
 
 import '../constants.dart';
 import '../components/chat_widget.dart';
@@ -21,10 +22,12 @@ class _ChatPageState extends State<ChatPage> {
 
   List<Map<String, dynamic>> _conversations = [];
   String? _activeConversationId;
-  bool _deleteConfirmId = false;
-  String? _pendingDeleteId;
   bool _shareModalOpen = false;
   String? _shareLink;
+
+  bool _showConversationOptions = false;
+  String? _optionsConversationId;
+  String _optionsTitle = '';
 
   // Incremented to force ChatWidget rebuild when switching conversations
   int _chatKey = 0;
@@ -83,8 +86,8 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       _conversations.removeWhere((c) => c['id'] == id);
-      _deleteConfirmId = false;
-      _pendingDeleteId = null;
+      _showConversationOptions = false;
+      _optionsConversationId = null;
 
       if (_activeConversationId == id) {
         _activeConversationId =
@@ -331,41 +334,76 @@ class _ChatPageState extends State<ChatPage> {
           ]),
         ]),
 
-      // ── Delete confirmation modal ──
-      if (_deleteConfirmId && _pendingDeleteId != null)
+      // ── Conversation options modal (rename + delete) ──
+      if (_showConversationOptions && _optionsConversationId != null)
         div(classes: 'modal-backdrop', [
           div(classes: 'modal-card', [
             div(classes: 'modal-header', [
-              h2([.text('Delete chat?')]),
+              h2([.text('Chat options')]),
               button(
                 classes: 'modal-close-btn',
                 onClick: () => setState(() {
-                  _deleteConfirmId = false;
-                  _pendingDeleteId = null;
+                  _showConversationOptions = false;
+                  _optionsConversationId = null;
                 }),
                 [.text('\u00D7')],
               ),
             ]),
             div(classes: 'modal-body', [
-              p([
-                .text(
-                  'This will permanently delete this conversation and all its messages.',
-                ),
-              ]),
+              p([.text('Rename this chat:')]),
+              input(
+                classes: 'share-link-input',
+                attributes: {
+                  'type': 'text',
+                  'value': _optionsTitle,
+                },
+                events: {
+                  'input': (event) {
+                    final target = event.target as web.HTMLInputElement;
+                    setState(() {
+                      _optionsTitle = target.value;
+                    });
+                  },
+                },
+              ),
             ]),
             div(classes: 'modal-footer modal-footer-row', [
               button(
                 classes: 'modal-secondary-btn',
                 onClick: () => setState(() {
-                  _deleteConfirmId = false;
-                  _pendingDeleteId = null;
+                  _showConversationOptions = false;
+                  _optionsConversationId = null;
                 }),
-                [.text('Cancel')],
+                [.text('Close')],
+              ),
+              button(
+                classes: 'modal-primary-btn',
+                onClick: () => setState(() {
+                  final id = _optionsConversationId;
+                  if (id != null) {
+                    final idx =
+                        _conversations.indexWhere((c) => c['id'] == id);
+                    if (idx != -1) {
+                      _conversations[idx] = {
+                        ..._conversations[idx],
+                        'title': _optionsTitle,
+                      };
+                    }
+                  }
+                  _showConversationOptions = false;
+                  _optionsConversationId = null;
+                }),
+                [.text('Save name')],
               ),
               button(
                 classes: 'modal-primary-btn modal-primary-btn--danger',
-                onClick: () => _deleteConversation(_pendingDeleteId!),
-                [.text('Delete')],
+                onClick: () {
+                  final id = _optionsConversationId;
+                  if (id != null) {
+                    _deleteConversation(id);
+                  }
+                },
+                [.text('Delete chat')],
               ),
             ]),
           ]),
@@ -390,12 +428,13 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
         button(
-          classes: 'conv-item-delete',
+          classes: 'conv-item-menu',
           onClick: () => setState(() {
-            _pendingDeleteId = id;
-            _deleteConfirmId = true;
+            _optionsConversationId = id;
+            _optionsTitle = title;
+            _showConversationOptions = true;
           }),
-          [.text('\u{1F5D1}')],
+          [.text('\u22EE')],
         ),
       ],
     );

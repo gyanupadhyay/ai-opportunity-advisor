@@ -654,24 +654,24 @@ html, body {
   text-overflow: ellipsis;
 }
 
-.conv-item-delete {
+.conv-item-menu {
   flex-shrink: 0;
   background: none;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 0.4rem;
+  padding: 0.25rem 0.4rem;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: 1rem;
   opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-.conv-item:hover .conv-item-delete {
+.conv-item:hover .conv-item-menu {
   opacity: 0.7;
 }
 
-.conv-item-delete:hover {
+.conv-item-menu:hover {
   opacity: 1 !important;
   background: rgba(255, 59, 48, 0.15);
   color: #ff3b30;
