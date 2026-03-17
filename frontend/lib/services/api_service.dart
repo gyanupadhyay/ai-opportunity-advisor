@@ -22,8 +22,11 @@ class ApiService {
   );
 
   static String get _sessionId {
+    // If the user is authenticated, prefer their stable Firebase uid.
     final uid = web.window.localStorage.getItem('pathora_uid');
-    if (uid != null && uid.isNotEmpty) return uid;
+    if (_isAuthenticated && uid != null && uid.isNotEmpty) {
+      return uid;
+    }
 
     const fallbackKey = 'pathora_fallback_session';
     final existing = web.window.localStorage.getItem(fallbackKey);
@@ -43,6 +46,8 @@ class ApiService {
   static bool get _isAuthenticated =>
       web.window.localStorage.getItem('pathora_id_token') != null &&
       web.window.localStorage.getItem('pathora_id_token')!.isNotEmpty;
+
+  static const String _guestDeletedKey = 'pathora_guest_chat_deleted';
 
   // ─── Core chat API (single-session) ───
 
@@ -89,6 +94,13 @@ class ApiService {
 
   /// Load existing conversation history for the current session/user.
   static Future<List<Map<String, String>>> loadConversation() async {
+    // For unauthenticated users, don't persist or reload history from the
+    // backend. Each page load should effectively start fresh, and deletes
+    // should clear what the user sees after a refresh.
+    if (!_isAuthenticated) {
+      return const [];
+    }
+
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl$endpointConversation/$_sessionId'),
@@ -117,6 +129,8 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> listConversations() async {
     if (!_isAuthenticated) {
+      final guestDeleted = web.window.localStorage.getItem(_guestDeletedKey);
+      if (guestDeleted == '1') return const [];
       return [
         {
           'id': _sessionId,
@@ -144,6 +158,10 @@ class ApiService {
     String title = 'New chat',
   }) async {
     if (!_isAuthenticated) {
+      // If the guest previously deleted the only chat, allow "New chat" to
+      // create a fresh local session and show a new conversation row.
+      web.window.localStorage.removeItem(_guestDeletedKey);
+      web.window.localStorage.removeItem('pathora_fallback_session');
       return {
         'id': _sessionId,
         'title': title,
@@ -168,8 +186,8 @@ class ApiService {
       // In unauthenticated mode we have only one "current chat" tied to the
       // fallback session id. Deleting it should reset the local session so the
       // old messages won't load again after refresh.
-      const fallbackKey = 'pathora_fallback_session';
-      web.window.localStorage.removeItem(fallbackKey);
+      web.window.localStorage.setItem(_guestDeletedKey, '1');
+      web.window.localStorage.removeItem('pathora_fallback_session');
       return true;
     }
 
@@ -209,7 +227,9 @@ class ApiService {
     String conversationId,
   ) async {
     if (!_isAuthenticated) {
-      return loadConversation();
+      // For guests, we don't reload any previous history after a delete/refresh.
+      // ChatWidget will manage the in-page messages during this session only.
+      return const [];
     }
 
     try {
